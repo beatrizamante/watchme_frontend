@@ -9,7 +9,7 @@ export const callUsersApi = {
   },
 
   update: async (data: UpdateUserInput): Promise<User> => {
-    if (data.profilePicture) {
+    if (data.file) {
       const formData = new FormData();
       if (data.username) formData.append("username", data.username);
       if (data.email) formData.append("email", data.email);
@@ -17,7 +17,7 @@ export const callUsersApi = {
       if (data.role) formData.append("role", data.role);
       if (data.active !== undefined)
         formData.append("active", data.active.toString());
-      formData.append("profilePicture", data.profilePicture);
+      formData.append("profilePicture", data.file);
 
       const response = await apiClient.patch("/user", formData, {
         headers: {
@@ -69,7 +69,7 @@ const UpdateUserInput = z.object({
     .optional(),
   role: z.enum(["ADMIN", "USER"]).optional(),
   active: z.boolean().optional(),
-  profilePicture: z.any().optional(),
+  file: z.any().optional(),
 });
 
 const DeleteUserInput = z.object({

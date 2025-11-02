@@ -4,16 +4,17 @@ import Footer from "../../components/Footer";
 import Button from "../../components/Button";
 import { useRouter } from "expo-router";
 import ListDelete from "../../components/list/DeleteList";
-import { erase, list } from "../../infrastructure/repository/PeopleRepository";
 import { useSelectedItem } from "../../stores/useSelectedItem";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import Person from "../interfaces/person";
+import { usePeopleApi } from "../hooks/usePeopleApi";
 
 export default function peopleList() {
   const router = useRouter();
   const [people, setPeople] = useState<Person[]>([]);
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const { list, deletePerson } = usePeopleApi();
 
   const fetchPeople = async () => {
     const allPeople = await list();
@@ -27,7 +28,7 @@ export default function peopleList() {
 
   const handleConfirmDelete = async () => {
     if (!idToDelete) return;
-    await erase(idToDelete);
+    await deletePerson(Number(idToDelete));
     console.log("DELETE CONFIRMED!");
     await fetchPeople();
     setConfirmModalVisible(false);

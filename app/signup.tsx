@@ -18,11 +18,12 @@ export default function SignUp() {
     try {
       if (password === confirmPass) {
         const data = {
-          username: name,
+          username,
           email,
           password,
         };
         const user = await create(data);
+        if (!user) Alert.alert("There was an error creating your user");
       } else {
         Alert.alert(
           "Password error:",
@@ -30,7 +31,6 @@ export default function SignUp() {
         );
         return;
       }
-
       console.log("User registered!");
       router.replace("/");
     } catch (error) {

@@ -54,7 +54,7 @@ export default function PeopleManagement() {
 
       const result = await create({
         name: name.trim(),
-        image: imageFile,
+        file: imageFile,
       });
 
       if (result) {

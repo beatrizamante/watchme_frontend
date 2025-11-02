@@ -3,13 +3,14 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import Button from "../../components/Button";
 import Footer from "../../components/Footer";
-import { list } from "../../infrastructure/repository/UserRepository";
 import List from "../../components/list/List";
 import User from "../interfaces/user";
+import { useUsersApi } from "../hooks/userUsersApi";
 
 export default function userList() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
+  const { list } = useUsersApi();
 
   useEffect(() => {
     const fetchUsers = async () => {

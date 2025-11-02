@@ -16,12 +16,16 @@ import { useSelectedItem } from "../../stores/useSelectedItem";
 import DropDown from "../../components/form/Dropdown";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useUsersApi } from "../hooks/userUsersApi";
+import {
+  CreateUserInput,
+  UpdateUserInput,
+} from "../../infrastructure/api/users/callUsersApi";
 
 export default function UserManagement() {
   const router = useRouter();
   const { selectedId, clear } = useSelectedItem();
   const { create, update, deleteUserPicture, find, error } = useUsersApi();
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"user" | "admin">("user");
   const [password, setPassword] = useState("");
@@ -34,13 +38,13 @@ export default function UserManagement() {
       if (selectedId) {
         const user = await find(Number(selectedId));
         if (user) {
-          setName(user.name);
+          setUsername(user.name);
           setEmail(user.email);
           setRole(user.role.toLowerCase() as "user" | "admin");
           return;
         }
       }
-      setName("");
+      setUsername("");
       setEmail("");
       setPassword("");
       setRole("user");
@@ -81,13 +85,23 @@ export default function UserManagement() {
   };
 
   const handleUpdate = async () => {
-    const result = await update({
+    const userData: UpdateUserInput = {
       id: Number(selectedId!),
-      name,
+      username,
       email,
-      password: password || undefined,
+      password,
       role: role.toUpperCase() as "USER" | "ADMIN",
-    });
+    };
+
+    if (selectedProfilePicture) {
+      userData.file = {
+        uri: selectedProfilePicture.uri,
+        type: selectedProfilePicture.mimeType || "image/jpeg",
+        name: selectedProfilePicture.name,
+      };
+    }
+
+    const result = await update(userData);
 
     if (result) {
       clear();
@@ -101,25 +115,16 @@ export default function UserManagement() {
   };
 
   const handleCreate = async () => {
-    if (!name.trim() || !email.trim() || !password.trim()) {
+    if (!username.trim() || !email.trim() || !password.trim()) {
       Alert.alert("Validation Error", "Please fill in all required fields.");
       return;
     }
 
-    const userData: any = {
-      name: name.trim(),
+    const userData: CreateUserInput = {
+      username: username.trim(),
       email: email.trim(),
       password,
-      role: role.toUpperCase() as "USER" | "ADMIN",
     };
-
-    if (selectedProfilePicture) {
-      userData.profilePicture = {
-        uri: selectedProfilePicture.uri,
-        type: selectedProfilePicture.mimeType || "image/jpeg",
-        name: selectedProfilePicture.name,
-      };
-    }
 
     const result = await create(userData);
 
@@ -155,14 +160,14 @@ export default function UserManagement() {
               </Text>
             </TouchableOpacity>
             <Text className="text-darker text-center font-semibold">
-              {isEditing ? `Editing ${name}` : ""}
+              {isEditing ? `Editing ${username}` : ""}
             </Text>
           </View>
 
           <Input
             label="name"
-            value={name}
-            handler={setName}
+            value={username}
+            handler={setUsername}
             isPassword={false}
           />
           <Input
@@ -177,7 +182,12 @@ export default function UserManagement() {
             handler={setPassword}
             isPassword={true}
           />
-          <DropDown label="role" value={role} handler={setRole} />
+
+          {isEditing ? (
+            <DropDown label="role" value={role} handler={setRole} />
+          ) : (
+            <div></div>
+          )}
 
           <View className="w-full px-4 gap-4">
             <TouchableOpacity

@@ -7,7 +7,7 @@ export const callPeopleApi = {
   create: async (data: CreatePersonInput): Promise<Person> => {
     const formData = new FormData();
     formData.append("name", data.name);
-    formData.append("image", data.image);
+    formData.append("image", data.file);
 
     const response = await apiClient.post("/person", formData, {
       headers: {
@@ -42,7 +42,7 @@ export const callPeopleApi = {
 
 const CreatePersonInput = z.object({
   name: z.string().min(1, "Name is required"),
-  image: z.any(),
+  file: z.any(),
 });
 
 const DeletePersonInput = z.object({

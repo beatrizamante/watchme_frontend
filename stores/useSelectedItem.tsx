@@ -1,11 +1,11 @@
 import { create } from "zustand";
 
 type SelectedItemState = {
-  selectedId: string | null;
+  selectedId: number | null;
 };
 
 type SelectedItemActions = {
-  store: (userId: string) => void;
+  store: (id: number) => void;
   clear: () => void;
 };
 

@@ -5,7 +5,7 @@ import Video from "../../../app/interfaces/video";
 export const callVideoApi = {
   create: async (data: CreateVideoInput): Promise<Video> => {
     const formData = new FormData();
-    formData.append("video", data.video);
+    formData.append("video", data.file);
 
     const response = await apiClient.post("/video", formData, {
       headers: {
@@ -32,7 +32,7 @@ export const callVideoApi = {
 };
 
 const CreateVideoInput = z.object({
-  video: z.any(),
+  file: z.any(),
 });
 
 const DeleteVideoInput = z.object({

@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import Button from "../../components/Button";
 import Footer from "../../components/Footer";
-import { useAuth } from "../../stores/useAuth";
 import VideoIcon from "../../components/videoIcon";
 import { useVideoApi } from "../hooks/useVideoApi";
 
@@ -44,7 +43,7 @@ export default function VideoManagement() {
         name: selectedVideo.name,
       };
 
-      const result = await create({ video: videoFile });
+      const result = await create({ file: videoFile });
 
       if (result) {
         console.log("Video created successfully:", result);
