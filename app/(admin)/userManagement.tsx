@@ -8,61 +8,91 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
+import * as DocumentPicker from "expo-document-picker";
 import Button from "../../components/Button";
 import Footer from "../../components/Footer";
 import Input from "../../components/form/Input";
 import { useSelectedItem } from "../../stores/useSelectedItem";
-import {
-  erase,
-  get,
-  patch,
-  store,
-  UserSchema,
-} from "../../infrastructure/repository/UserRepository";
 import DropDown from "../../components/form/Dropdown";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import { useUsersApi } from "../hooks/userUsersApi";
 
 export default function UserManagement() {
   const router = useRouter();
   const { selectedId, clear } = useSelectedItem();
-  const [name, setname] = useState("");
+  const { create, update, deleteUserPicture, find, error } = useUsersApi();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"user" | "admin">("user");
   const [password, setPassword] = useState("");
+  const [selectedProfilePicture, setSelectedProfilePicture] =
+    useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
       if (selectedId) {
-        const user = await get(selectedId);
+        const user = await find(Number(selectedId));
         if (user) {
-          setname(user.name);
+          setName(user.name);
           setEmail(user.email);
-          setRole(user.role as "user" | "admin");
+          setRole(user.role.toLowerCase() as "user" | "admin");
           return;
         }
       }
-      setname("");
+      setName("");
       setEmail("");
       setPassword("");
       setRole("user");
+      setSelectedProfilePicture(null);
     };
 
     fetchUser();
   }, [selectedId]);
 
+  const selectProfilePicture = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*"],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setSelectedProfilePicture(result.assets[0]);
+        Alert.alert(
+          "Profile Picture Selected",
+          `Selected: ${result.assets[0].name}`
+        );
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to select profile picture");
+      console.error("Error selecting image:", error);
+    }
+  };
+
   const handleConfirmDelete = async () => {
-    await erase(selectedId!);
-    clear();
-    console.log("DELETE CONFIRMED!");
-    setConfirmModalVisible(false);
-    router.replace("/userList");
+    const success = await deleteUserPicture(Number(selectedId!));
+    if (success) {
+      clear();
+      console.log("DELETE CONFIRMED!");
+      setConfirmModalVisible(false);
+      router.replace("/(admin)/userList");
+    }
   };
 
   const handleUpdate = async () => {
-    await patch(selectedId!, { name, email, password, role });
-    clear();
-    router.replace("/(admin)/userList");
+    const result = await update({
+      id: Number(selectedId!),
+      name,
+      email,
+      password: password || undefined,
+      role: role.toUpperCase() as "USER" | "ADMIN",
+    });
+
+    if (result) {
+      clear();
+      router.replace("/(admin)/userList");
+    }
   };
 
   const handleDelete = async () => {
@@ -71,20 +101,32 @@ export default function UserManagement() {
   };
 
   const handleCreate = async () => {
-    const parse = UserSchema.safeParse({
-      name,
-      email,
-      role: role.toLowerCase(),
-      password,
-    });
-
-    if (!parse.success) {
-      Alert.alert("The values were not validated.");
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      Alert.alert("Validation Error", "Please fill in all required fields.");
       return;
     }
-    await store(parse.data);
-    clear();
-    router.replace("/(admin)/userList");
+
+    const userData: any = {
+      name: name.trim(),
+      email: email.trim(),
+      password,
+      role: role.toUpperCase() as "USER" | "ADMIN",
+    };
+
+    if (selectedProfilePicture) {
+      userData.profilePicture = {
+        uri: selectedProfilePicture.uri,
+        type: selectedProfilePicture.mimeType || "image/jpeg",
+        name: selectedProfilePicture.name,
+      };
+    }
+
+    const result = await create(userData);
+
+    if (result) {
+      clear();
+      router.replace("/(admin)/userList");
+    }
   };
 
   const handleBack = () => {
@@ -120,7 +162,7 @@ export default function UserManagement() {
           <Input
             label="name"
             value={name}
-            handler={setname}
+            handler={setName}
             isPassword={false}
           />
           <Input
@@ -136,6 +178,39 @@ export default function UserManagement() {
             isPassword={true}
           />
           <DropDown label="role" value={role} handler={setRole} />
+
+          <View className="w-full px-4 gap-4">
+            <TouchableOpacity
+              onPress={selectProfilePicture}
+              className="border-2 border-dashed border-gray-400 bg-gray-50 p-4 rounded-lg items-center"
+            >
+              <Text className="text-base text-gray-600 font-semibold">
+                {selectedProfilePicture
+                  ? "Change Profile Picture"
+                  : "Select Profile Picture (Optional)"}
+              </Text>
+              <Text className="text-sm text-gray-500 mt-1">
+                Tap to choose image from device
+              </Text>
+            </TouchableOpacity>
+
+            {selectedProfilePicture && (
+              <View className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                <Text className="text-green-800 font-semibold text-sm">
+                  Selected Image:
+                </Text>
+                <Text className="text-green-700 text-sm mt-1">
+                  {selectedProfilePicture.name}
+                </Text>
+              </View>
+            )}
+
+            {error && (
+              <View className="bg-red-50 border border-red-200 p-3 rounded-lg">
+                <Text className="text-red-800 text-sm">Error: {error}</Text>
+              </View>
+            )}
+          </View>
 
           {isEditing ? (
             <View className="flex flex-row justify-between items-center gap-4 mt-4">

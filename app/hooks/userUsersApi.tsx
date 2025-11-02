@@ -6,11 +6,11 @@ import {
 } from "../../infrastructure/api/users/callUsersApi";
 import User from "../interfaces/user";
 
-export const useUserApi = () => {
+export const useUsersApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createUser = async (data: CreateUserInput): Promise<User | null> => {
+  const create = async (data: CreateUserInput): Promise<User | null> => {
     setLoading(true);
     setError(null);
 
@@ -25,7 +25,7 @@ export const useUserApi = () => {
     }
   };
 
-  const updateUser = async (data: UpdateUserInput): Promise<User | null> => {
+  const update = async (data: UpdateUserInput): Promise<User | null> => {
     setLoading(true);
     setError(null);
 
@@ -55,7 +55,7 @@ export const useUserApi = () => {
     }
   };
 
-  const findUser = async (id: number): Promise<User | null> => {
+  const find = async (id: number): Promise<User | null> => {
     setLoading(true);
     setError(null);
 
@@ -70,12 +70,12 @@ export const useUserApi = () => {
     }
   };
 
-  const listUsers = async (active?: boolean): Promise<User[]> => {
+  const list = async (active?: boolean): Promise<User[]> => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await callUsersApi.list({ active });
+      const result = await callUsersApi.list(active);
       return result;
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || "An error occurred");
@@ -86,11 +86,11 @@ export const useUserApi = () => {
   };
 
   return {
-    createUser,
-    updateUser,
+    create,
+    update,
     deleteUserPicture,
-    findUser,
-    listUsers,
+    find,
+    list,
     loading,
     error,
   };

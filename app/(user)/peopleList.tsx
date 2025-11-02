@@ -1,12 +1,13 @@
 import { View, Text, ScrollView } from "react-native";
 import React, { useEffect, useState } from "react";
 import Footer from "../../components/Footer";
-import { list } from "../../infrastructure/repository/PeopleRepository";
-import { Person } from "../interfaces/person";
 import List from "../../components/list/List";
+import Person from "../interfaces/person";
+import { usePeopleApi } from "../hooks/usePeopleApi";
 
 export default function peopleList() {
   const [people, setPeople] = useState<Person[]>([]);
+  const { list } = usePeopleApi();
 
   useEffect(() => {
     const fetchPeople = async () => {

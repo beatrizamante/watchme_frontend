@@ -9,8 +9,32 @@ export const callUsersApi = {
   },
 
   update: async (data: UpdateUserInput): Promise<User> => {
-    const response = await apiClient.patch("/user", data);
-    return response.data;
+    if (data.profilePicture) {
+      const formData = new FormData();
+      if (data.username) formData.append("username", data.username);
+      if (data.email) formData.append("email", data.email);
+      if (data.password) formData.append("password", data.password);
+      if (data.role) formData.append("role", data.role);
+      if (data.active !== undefined)
+        formData.append("active", data.active.toString());
+      formData.append("profilePicture", data.profilePicture);
+
+      const response = await apiClient.patch("/user", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } else {
+      const response = await apiClient.patch("/user", {
+        username: data.username,
+        email: data.email,
+        password: data.password,
+        role: data.role,
+        active: data.active,
+      });
+      return response.data;
+    }
   },
 
   delete: async (data: DeleteUserInput): Promise<void> => {
@@ -23,27 +47,29 @@ export const callUsersApi = {
     return response.data;
   },
 
-  list: async (data: FindAllUsersInput): Promise<User[]> => {
-    const response = await apiClient.get(`/users?active=${data.active}`);
+  list: async (active?: boolean): Promise<User[]> => {
+    const response = await apiClient.get(`/users?active=${active}`);
     return response.data;
   },
 };
 
 const CreateUserInput = z.object({
-  name: z.string().min(1, "Name is required"),
+  username: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email format"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const UpdateUserInput = z.object({
   id: z.number(),
-  name: z.string().min(1, "Name is required").optional(),
+  username: z.string().min(1, "Name is required").optional(),
   email: z.string().email("Invalid email format").optional(),
   password: z
     .string()
     .min(6, "Password must be at least 6 characters")
     .optional(),
   role: z.enum(["ADMIN", "USER"]).optional(),
+  active: z.boolean().optional(),
+  profilePicture: z.any().optional(),
 });
 
 const DeleteUserInput = z.object({

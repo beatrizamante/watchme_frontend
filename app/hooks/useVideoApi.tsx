@@ -9,7 +9,7 @@ export const useVideoApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createVideo = async (data: CreateVideoInput): Promise<Video | null> => {
+  const create = async (data: CreateVideoInput): Promise<Video | null> => {
     setLoading(true);
     setError(null);
 
@@ -39,7 +39,7 @@ export const useVideoApi = () => {
     }
   };
 
-  const findVideo = async (id: number): Promise<Video | null> => {
+  const find = async (id: number): Promise<Video | null> => {
     setLoading(true);
     setError(null);
 
@@ -54,7 +54,7 @@ export const useVideoApi = () => {
     }
   };
 
-  const listVideos = async (): Promise<Video[]> => {
+  const list = async (): Promise<Video[]> => {
     setLoading(true);
     setError(null);
 
@@ -70,10 +70,10 @@ export const useVideoApi = () => {
   };
 
   return {
-    createVideo,
+    create,
     deleteVideo,
-    findVideo,
-    listVideos,
+    find,
+    list,
     loading,
     error,
   };

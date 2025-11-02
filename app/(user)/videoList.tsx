@@ -7,14 +7,14 @@ import CardList from "../../components/cardList/cardList";
 import ActionModal from "../../components/ActionModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useSelectedItem } from "../../stores/useSelectedItem";
-import { Video } from "../interfaces/video";
-import { erase, list } from "../../infrastructure/repository/VideoRepository";
-import data from "../../mocks/videos";
+import Video from "../interfaces/video";
+import { useVideoApi } from "../hooks/useVideoApi";
 
 export default function videoList() {
   const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
   const { selectedId, clear, store } = useSelectedItem();
+  const { list, deleteVideo } = useVideoApi();
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
 
@@ -50,7 +50,7 @@ export default function videoList() {
   };
 
   const handleConfirmDelete = async () => {
-    await erase(selectedId!);
+    await deleteVideo(Number(selectedId!));
     clear();
     console.log("DELETE CONFIRMED!");
     setConfirmModalVisible(false);
@@ -76,7 +76,7 @@ export default function videoList() {
             <Text className="text-darker text-center text-lg font-semibold">
               Select a video to manage:
             </Text>
-            <CardList data={data} onDoubleClick={handleDoubleClick} />
+            <CardList data={videos} onDoubleClick={handleDoubleClick} />
             <Button content="Create new video!" onPress={createHandler} />
           </View>
         </View>

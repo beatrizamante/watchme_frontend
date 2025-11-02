@@ -1,37 +1,73 @@
 import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
+import * as DocumentPicker from "expo-document-picker";
 import Button from "../../components/Button";
 import Footer from "../../components/Footer";
 import Input from "../../components/form/Input";
-import {
-  PeopleSchema,
-  store,
-} from "../../infrastructure/repository/PeopleRepository";
-import { useAuth } from "../../stores/useAuth";
+import { usePeopleApi } from "../hooks/usePeopleApi";
 
 export default function PeopleManagement() {
   const router = useRouter();
-  const logInfo = useAuth();
+  const { create, loading, error } = usePeopleApi();
   const [name, setName] = useState<string>("");
+  const [selectedImage, setSelectedImage] =
+    useState<DocumentPicker.DocumentPickerAsset | null>(null);
+
+  const selectPersonImage = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*"],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setSelectedImage(result.assets[0]);
+        Alert.alert(
+          "Person Image Selected",
+          `Selected: ${result.assets[0].name}`
+        );
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to select person image");
+      console.error("Error selecting image:", error);
+    }
+  };
 
   const handleCreate = async () => {
-    const user_id = String(logInfo.user!.id);
-    const parse = PeopleSchema.safeParse({
-      name,
-      user_id,
-    });
-    console.log(parse);
-
-    if (!parse.success) {
-      Alert.alert("Validation Error", "Please check your inputs");
+    if (!name.trim()) {
+      Alert.alert("Validation Error", "Please enter a person's name");
       return;
     }
-    await store(parse.data);
-    Alert.prompt("User created successfully!");
-    setName("");
-    console.log("Criar nova pessoa:", { name });
-    router.push("/(admin)/peopleList");
+
+    if (!selectedImage) {
+      Alert.alert("Validation Error", "Please select a person's image");
+      return;
+    }
+
+    try {
+      const imageFile = {
+        uri: selectedImage.uri,
+        type: selectedImage.mimeType || "image/jpeg",
+        name: selectedImage.name,
+      };
+
+      const result = await create({
+        name: name.trim(),
+        image: imageFile,
+      });
+
+      if (result) {
+        Alert.alert("Success", "Person created successfully!", [
+          { text: "OK", onPress: () => router.push("/(admin)/peopleList") },
+        ]);
+        setName("");
+        setSelectedImage(null);
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to create person");
+      console.error("Error creating person:", error);
+    }
   };
 
   const handleBack = () => {
@@ -64,26 +100,54 @@ export default function PeopleManagement() {
             handler={setName}
             isPassword={false}
           />
-          <Button content="Upload person’s video" onPress={handleCreate} />
-          <Text className="text-xl text-darker font-semibold text-center">
-            You need the person’s individual video stream to be able to gather
-            the hash
+          <View className="w-full px-4 gap-4">
+            <TouchableOpacity
+              onPress={selectPersonImage}
+              className="border-2 border-dashed border-gray-400 bg-gray-50 p-6 rounded-lg items-center"
+            >
+              <Text className="text-lg text-gray-600 font-semibold">
+                {selectedImage ? "Change Person Image" : "Select Person Image"}
+              </Text>
+              <Text className="text-sm text-gray-500 mt-2">
+                Required for person recognition
+              </Text>
+            </TouchableOpacity>
+
+            {selectedImage && (
+              <View className="bg-green-50 border border-green-200 p-4 rounded-lg">
+                <Text className="text-green-800 font-semibold">
+                  Selected Image:
+                </Text>
+                <Text className="text-green-700 mt-1">
+                  {selectedImage.name}
+                </Text>
+              </View>
+            )}
+
+            {error && (
+              <View className="bg-red-50 border border-red-200 p-4 rounded-lg">
+                <Text className="text-red-800">Error: {error}</Text>
+              </View>
+            )}
+          </View>
+          <Text className="text-lg text-darker font-semibold text-center px-4">
+            Upload a clear photo of the person for facial recognition
           </Text>
-          <Text className="text-[32px] font-semibold text-center">OR</Text>
-          <TouchableOpacity>
-            <Text className="text-xl text-semidark font-semibold">
-              Upload the hash here
-            </Text>
-          </TouchableOpacity>
-          <Text className="text-sm text-darker font-semibold text-center">
-            Check the format on the
-          </Text>
-          <TouchableOpacity>
-            <Text className="text-xl text-semidark font-semibold">
-              Documentation
-            </Text>
-          </TouchableOpacity>
-          <Button content="Create new person!" onPress={handleCreate} />
+
+          {loading || !name.trim() || !selectedImage ? (
+            <View className="h-[60px] opacity-50">
+              <TouchableOpacity
+                disabled={true}
+                className="bg-gray-400 px-[30px] py-3 min-w-[160px] w-full min-h-[36px] h-full flex justify-center items-center rounded-[25px] border-gray-300 border shadow-black shadow-lg"
+              >
+                <Text className="text-gray-600 text-xl font-semibold text-center">
+                  {loading ? "Creating..." : "Fill All Fields"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <Button content="Create new person!" onPress={handleCreate} />
+          )}
         </View>
       </ScrollView>
       <Footer />

@@ -5,49 +5,41 @@ import Input from "../components/form/Input";
 import Button from "../components/Button";
 import { useRouter } from "expo-router";
 import { useAuth } from "../stores/useAuth";
-import { findByName } from "../infrastructure/repository/UserRepository";
-import { makeDatabase } from "../infrastructure/makeDatabase";
-import User from "./interfaces/user";
+import { useLoginApi } from "./hooks/useLoginApi";
 
 export default function Home() {
   const router = useRouter();
   const logInfo = useAuth((state) => state.login);
-  const [login, onChangeLogin] = React.useState("");
+  const { login } = useLoginApi();
+  const [email, onChangeLogin] = React.useState("");
   const [password, onChangePassword] = React.useState("");
-  const [err, setErr] = React.useState("");
 
   useEffect(() => {
     const setup = async () => {
-      await makeDatabase();
       console.log("Tables created");
     };
     setup();
   }, []);
 
   const handleLogin = async () => {
-    const user: User | null = await findByName(login);
+    const response = await login({ email, password });
+    const { user } = response;
 
     if (!user || user === null) {
-      Alert.alert("This user does not exist, please, create an account;");
+      Alert.alert(
+        "There was an error logging in. Does your user exist? Please, create an account;"
+      );
       return;
     }
 
-    if (password === user.password) {
-      setErr("");
-      logInfo({
-        id: user.id,
-        name: user.name,
-        role: user.role,
-      });
-    } else {
-      Alert.alert("Invalid login, please, check your password");
-    }
+    logInfo({
+      name: user.username,
+      role: user.role,
+    });
 
-    if (user.role === "user") {
-      setErr("");
+    if (user.role.toLowerCase() === "user") {
       router.replace("/(user)");
     } else {
-      setErr("");
       router.replace("/(admin)");
     }
     return;
@@ -71,7 +63,7 @@ export default function Home() {
         <View className="flex flex-col justify-center items-center gap-4">
           <Input
             label="username"
-            value={login}
+            value={email}
             handler={onChangeLogin}
             isPassword={false}
           />

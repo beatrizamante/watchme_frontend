@@ -1,16 +1,13 @@
 import { useState } from "react";
-import {
-  callPeopleApi,
-  CreatePersonInput,
-} from "../../infrastructure/api/people/callPeopleApi";
-import Person from "../interfaces/person";
 import { authApi, LoginInput } from "../../infrastructure/api/middleware/auth";
 
-export const usePeopleApi = () => {
+export const useLoginApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const login = async (data: LoginInput): Promise<{ message: string }> => {
+  const login = async (
+    data: LoginInput
+  ): Promise<{ message: string; user: { username: string; role: string } }> => {
     setLoading(true);
     setError(null);
 
@@ -19,7 +16,10 @@ export const usePeopleApi = () => {
       return result;
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || "An error occurred");
-      return { message: "There was an error logging in " };
+      return {
+        message: "There was an error logging in ",
+        user: { username: "", role: "" },
+      };
     } finally {
       setLoading(false);
     }

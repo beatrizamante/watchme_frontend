@@ -9,9 +9,7 @@ export const usePeopleApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createPerson = async (
-    data: CreatePersonInput
-  ): Promise<Person | null> => {
+  const create = async (data: CreatePersonInput): Promise<Person | null> => {
     setLoading(true);
     setError(null);
 
@@ -41,7 +39,7 @@ export const usePeopleApi = () => {
     }
   };
 
-  const findPerson = async (id: number): Promise<Person | null> => {
+  const find = async (id: number): Promise<Person | null> => {
     setLoading(true);
     setError(null);
 
@@ -56,7 +54,7 @@ export const usePeopleApi = () => {
     }
   };
 
-  const searchPerson = async (id: number, videoId: number): Promise<any> => {
+  const search = async (id: number, videoId: number): Promise<any> => {
     setLoading(true);
     setError(null);
 
@@ -71,7 +69,7 @@ export const usePeopleApi = () => {
     }
   };
 
-  const listPeople = async (): Promise<Person[]> => {
+  const list = async (): Promise<Person[]> => {
     setLoading(true);
     setError(null);
 
@@ -87,11 +85,11 @@ export const usePeopleApi = () => {
   };
 
   return {
-    createPerson,
+    create,
     deletePerson,
-    findPerson,
-    listPeople,
-    searchPerson,
+    find,
+    list,
+    search,
     loading,
     error,
   };

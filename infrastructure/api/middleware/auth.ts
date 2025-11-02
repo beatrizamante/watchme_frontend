@@ -3,7 +3,9 @@ import { apiClient } from "../_lib/apiClient";
 import User from "../../../app/interfaces/user";
 
 export const authApi = {
-  login: async (data: LoginInput): Promise<{ message: string }> => {
+  login: async (
+    data: LoginInput
+  ): Promise<{ message: string; user: { username: string; role: string } }> => {
     const response = await apiClient.post("/login", data);
     return response.data;
   },
