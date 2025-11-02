@@ -28,26 +28,7 @@
       "favicon": "./assets/icon.png",
       "bundler": "metro"
     },
-    "plugins": [
-      "expo-router",
-      "expo-font",
-      [
-        "expo-sqlite",
-        {
-          "enableFTS": true,
-          "useSQLCipher": true,
-          "android": {
-            "enableFTS": false,
-            "useSQLCipher": false
-          },
-          "ios": {
-            "customBuildFlags": [
-              "-DSQLITE_ENABLE_DBSTAT_VTAB=1 -DSQLITE_ENABLE_SNAPSHOT=1"
-            ]
-          }
-        }
-      ]
-    ],
+    "plugins": ["expo-router", "expo-font"],
     "extra": {
       "router": {
         "origin": false

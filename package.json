@@ -14,9 +14,9 @@
     "@react-native-picker/picker": "2.9.0",
     "@react-navigation/drawer": "^7.3.12",
     "axios": "^1.13.1",
-    "expo": "~52.0.43",
+    "expo": "~52.0.47",
     "expo-constants": "~17.0.8",
-    "expo-document-picker": "^14.0.7",
+    "expo-document-picker": "~13.0.3npm",
     "expo-font": "~13.0.4",
     "expo-linking": "~7.0.5",
     "expo-router": "~4.0.21",
@@ -30,6 +30,8 @@
     "react-native-safe-area-context": "^4.12.0",
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
+    "run": "^1.5.0",
+    "start": "^5.1.0",
     "tabs": "file:",
     "zod": "^3.25.76",
     "zustand": "^5.0.4"
@@ -42,5 +44,6 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.3.3"
   },
-  "private": true
+  "private": true,
+  "packageManager": "pnpm@10.18.1+sha512.77a884a165cbba2d8d1c19e3b4880eee6d2fcabd0d879121e282196b80042351d5eb3ca0935fa599da1dc51265cc68816ad2bddd2a2de5ea9fdf92adbec7cd34"
 }
