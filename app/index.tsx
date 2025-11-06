@@ -62,7 +62,7 @@ export default function Home() {
       >
         <View className="flex flex-col justify-center items-center gap-4">
           <Input
-            label="username"
+            label="email"
             value={email}
             handler={onChangeLogin}
             isPassword={false}
