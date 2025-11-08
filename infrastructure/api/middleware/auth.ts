@@ -15,12 +15,18 @@ export const authApi = {
     return response.data;
   },
 
-  checkAuth: async (): Promise<boolean> => {
+  checkAuth: async (): Promise<{
+    isValid: boolean;
+    user?: { username: string; role: string };
+  }> => {
     try {
-      await apiClient.get("/auth/refresh");
-      return true;
+      const response = await apiClient.get("/auth/refresh");
+      return {
+        isValid: true,
+        user: response.data.user,
+      };
     } catch (error) {
-      return false;
+      return { isValid: false };
     }
   },
   register: async (data: RegisterInput): Promise<User> => {

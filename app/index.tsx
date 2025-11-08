@@ -22,27 +22,34 @@ export default function Home() {
   }, []);
 
   const handleLogin = async () => {
-    const response = await login({ email, password });
-    const { user } = response;
+    try {
+      const response = await login({ email, password });
+      const { user } = response;
 
-    if (!user || user === null) {
-      Alert.alert(
-        "There was an error logging in. Does your user exist? Please, create an account;"
-      );
-      return;
+      if (!user || user === null || !user.username) {
+        Alert.alert(
+          "Login Error",
+          "There was an error logging in. Does your user exist? Please, create an account."
+        );
+        return;
+      }
+
+      logInfo({
+        name: user.username,
+        role: user.role,
+      });
+
+      setTimeout(() => {
+        if (user.role.toLowerCase() === "admin") {
+          router.replace("/(admin)");
+        } else {
+          router.replace("/(user)");
+        }
+      }, 100);
+    } catch (error) {
+      Alert.alert("Login Error", "An unexpected error occurred during login.");
+      console.error("Login error:", error);
     }
-
-    logInfo({
-      name: user.username,
-      role: user.role,
-    });
-
-    if (user.role.toLowerCase() === "user") {
-      router.replace("/(user)");
-    } else {
-      router.replace("/(admin)");
-    }
-    return;
   };
 
   const handleGoToSignUp = () => {

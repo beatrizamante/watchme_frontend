@@ -3,14 +3,22 @@ import { Stack, useRouter } from "expo-router";
 import { useAuth } from "../../stores/useAuth";
 
 export default function UserLayout() {
-  const isAuthenticated = useAuth((state) => state.isAuthenticated);
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/");
-    }
-  }, [isAuthenticated]);
+    const timeoutId = setTimeout(() => {
+      if (!isAuthenticated) {
+        router.replace("/");
+      }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <Stack>

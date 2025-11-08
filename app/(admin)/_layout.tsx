@@ -3,17 +3,22 @@ import { Stack, useRouter } from "expo-router";
 import { useAuth } from "../../stores/useAuth";
 
 export default function AdminLayout() {
-  const { user } = useAuth();
-  const isAuthenticated = useAuth((state) => state.isAuthenticated);
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== "admin") {
-      router.replace("/");
-    }
-  }, [isAuthenticated]);
+    const timeoutId = setTimeout(() => {
+      if (!isAuthenticated || user?.role?.toLowerCase() !== "admin") {
+        router.replace("/");
+      }
+    }, 100);
 
-  if (!isAuthenticated) return null;
+    return () => clearTimeout(timeoutId);
+  }, [isAuthenticated, user, router]);
+
+  if (!isAuthenticated || user?.role?.toLowerCase() !== "admin") {
+    return null;
+  }
 
   return (
     <Stack>
