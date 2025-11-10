@@ -28,7 +28,6 @@ export const useUsersApi = () => {
   const update = async (data: UpdateUserInput): Promise<User | null> => {
     setLoading(true);
     setError(null);
-
     try {
       const result = await callUsersApi.update(data);
       return result;

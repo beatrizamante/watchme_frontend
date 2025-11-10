@@ -9,36 +9,20 @@ export const callUsersApi = {
   },
 
   update: async (data: UpdateUserInput): Promise<User> => {
-    if (data.file) {
-      const formData = new FormData();
-      if (data.username) formData.append("username", data.username);
-      if (data.email) formData.append("email", data.email);
-      if (data.password) formData.append("password", data.password);
-      if (data.role) formData.append("role", data.role);
-      if (data.active !== undefined)
-        formData.append("active", data.active.toString());
-      formData.append("profilePicture", data.file);
+    const updatePayload: any = {};
 
-      const response = await apiClient.patch("/user", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      return response.data;
-    } else {
-      const response = await apiClient.patch("/user", {
-        username: data.username,
-        email: data.email,
-        password: data.password,
-        role: data.role,
-        active: data.active,
-      });
-      return response.data;
-    }
-  },
+    if (data.username !== undefined) updatePayload.username = data.username;
+    if (data.email !== undefined) updatePayload.email = data.email;
+    if (data.password !== undefined) updatePayload.password = data.password;
+    if (data.role !== undefined) updatePayload.role = data.role;
+    if (data.active !== undefined) updatePayload.active = data.active;
 
-  delete: async (data: DeleteUserInput): Promise<void> => {
-    const response = await apiClient.delete(`/user/picture?id=${data.id}`);
+    console.log("Update payload being sent:", updatePayload);
+
+    const response = await apiClient.patch(
+      `/user?id=${data.id}`,
+      updatePayload
+    );
     return response.data;
   },
 
@@ -93,7 +77,6 @@ const UpdateUserInput = z.object({
     .optional(),
   role: z.enum(["ADMIN", "USER"]).optional(),
   active: z.boolean().optional(),
-  file: z.any().optional(),
 });
 
 const DeleteUserInput = z.object({

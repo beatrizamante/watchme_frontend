@@ -14,6 +14,7 @@ import Footer from "../../components/Footer";
 import Input from "../../components/form/Input";
 import { useSelectedItem } from "../../stores/useSelectedItem";
 import DropDown from "../../components/form/Dropdown";
+import Toggle from "../../components/form/Toggle";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useUsersApi } from "../hooks/useUsersApi";
 import {
@@ -24,23 +25,35 @@ import {
 export default function UserManagement() {
   const router = useRouter();
   const { selectedId, clear } = useSelectedItem();
-  const { create, update, deleteUserPicture, find, error } = useUsersApi();
+  const { create, update, find, error } = useUsersApi();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"user" | "admin">("user");
   const [password, setPassword] = useState("");
-  const [selectedProfilePicture, setSelectedProfilePicture] =
-    useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+
+  const [originalUser, setOriginalUser] = useState<{
+    username: string;
+    email: string;
+    role: "user" | "admin";
+  } | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       if (selectedId) {
         const user = await find(Number(selectedId));
         if (user) {
-          setUsername(user.name);
+          const roleValue = user.role.toLowerCase() as "user" | "admin";
+          setUsername(user.username);
           setEmail(user.email);
-          setRole(user.role.toLowerCase() as "user" | "admin");
+          setRole(roleValue);
+
+          setOriginalUser({
+            username: user.username,
+            email: user.email,
+            role: roleValue,
+          });
           return;
         }
       }
@@ -48,34 +61,19 @@ export default function UserManagement() {
       setEmail("");
       setPassword("");
       setRole("user");
-      setSelectedProfilePicture(null);
+      setOriginalUser(null);
     };
 
     fetchUser();
   }, [selectedId]);
 
-  const selectProfilePicture = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*"],
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled && result.assets && result.assets[0]) {
-        setSelectedProfilePicture(result.assets[0]);
-        Alert.alert(
-          "Profile Picture Selected",
-          `Selected: ${result.assets[0].name}`
-        );
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to select profile picture");
-      console.error("Error selecting image:", error);
-    }
-  };
-
   const handleConfirmDelete = async () => {
-    const success = await deleteUserPicture(Number(selectedId!));
+    const userData: UpdateUserInput = {
+      id: Number(selectedId!),
+      active: false,
+    };
+
+    const success = await update(userData);
     if (success) {
       clear();
       console.log("DELETE CONFIRMED!");
@@ -85,22 +83,36 @@ export default function UserManagement() {
   };
 
   const handleUpdate = async () => {
-    const userData: UpdateUserInput = {
-      id: Number(selectedId!),
-      username,
-      email,
-      password,
-      role: role.toUpperCase() as "USER" | "ADMIN",
-    };
-
-    if (selectedProfilePicture) {
-      userData.file = {
-        uri: selectedProfilePicture.uri,
-        type: selectedProfilePicture.mimeType || "image/jpeg",
-        name: selectedProfilePicture.name,
-      };
+    if (!originalUser) {
+      Alert.alert("Error", "Original user data not found");
+      return;
     }
 
+    const userData: UpdateUserInput = {
+      id: Number(selectedId!),
+    };
+
+    if (username !== originalUser.username) {
+      userData.username = username;
+    }
+    if (email !== originalUser.email) {
+      userData.email = email;
+    }
+    if (role !== originalUser.role) {
+      userData.role = role.toUpperCase() as "USER" | "ADMIN";
+    }
+    if (password.trim() !== "") {
+      userData.password = password;
+    }
+
+    const hasChanges = Object.keys(userData).length > 1;
+
+    if (!hasChanges) {
+      Alert.alert("No Changes", "No changes detected to update.");
+      return;
+    }
+
+    console.log("Sending update data:", userData);
     const result = await update(userData);
 
     if (result) {
@@ -111,7 +123,7 @@ export default function UserManagement() {
 
   const handleDelete = async () => {
     setConfirmModalVisible(true);
-    console.log("Deletar usuário:", selectedId);
+    console.log("Desativar usuário:", selectedId);
   };
 
   const handleCreate = async () => {
@@ -184,44 +196,9 @@ export default function UserManagement() {
           />
 
           {isEditing ? (
-            <DropDown label="role" value={role} handler={setRole} />
-          ) : (
-            <View></View>
-          )}
-
-          {isEditing ? (
-            <View className="w-full px-4 gap-4">
-              <TouchableOpacity
-                onPress={selectProfilePicture}
-                className="border-2 border-dashed border-gray-400 bg-gray-50 p-4 rounded-lg items-center"
-              >
-                <Text className="text-base text-gray-600 font-semibold">
-                  {selectedProfilePicture
-                    ? "Change Profile Picture"
-                    : "Select Profile Picture (Optional)"}
-                </Text>
-                <Text className="text-sm text-gray-500 mt-1">
-                  Tap to choose image from device
-                </Text>
-              </TouchableOpacity>
-
-              {selectedProfilePicture && (
-                <View className="bg-green-50 border border-green-200 p-3 rounded-lg">
-                  <Text className="text-green-800 font-semibold text-sm">
-                    Selected Image:
-                  </Text>
-                  <Text className="text-green-700 text-sm mt-1">
-                    {selectedProfilePicture.name}
-                  </Text>
-                </View>
-              )}
-
-              {error && (
-                <View className="bg-red-50 border border-red-200 p-3 rounded-lg">
-                  <Text className="text-red-800 text-sm">Error: {error}</Text>
-                </View>
-              )}
-            </View>
+            <>
+              <DropDown label="role" value={role} handler={setRole} />
+            </>
           ) : (
             <View></View>
           )}
