@@ -14,7 +14,6 @@ import Footer from "../../components/Footer";
 import Input from "../../components/form/Input";
 import { useSelectedItem } from "../../stores/useSelectedItem";
 import DropDown from "../../components/form/Dropdown";
-import Toggle from "../../components/form/Toggle";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useUsersApi } from "../hooks/useUsersApi";
 import {
