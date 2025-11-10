@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 import Input from "../components/form/Input";
 import Button from "../components/Button";
 import { useRouter } from "expo-router";
-import { useUsersApi } from "./hooks/userUsersApi";
+import { useLoginApi } from "./hooks/useLoginApi";
 
 export default function SignUp() {
   const [username, setUsername] = useState("");
@@ -12,7 +12,7 @@ export default function SignUp() {
   const [confirmPass, setConfirmPass] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
-  const { create } = useUsersApi();
+  const { register } = useLoginApi();
 
   const handleCreateAccount = async () => {
     try {
@@ -22,7 +22,7 @@ export default function SignUp() {
           email,
           password,
         };
-        const user = await create(data);
+        const user = await register(data);
         if (!user) Alert.alert("There was an error creating your user");
       } else {
         Alert.alert(

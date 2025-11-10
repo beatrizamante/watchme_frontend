@@ -29,6 +29,7 @@ export const authApi = {
       return { isValid: false };
     }
   },
+
   register: async (data: RegisterInput): Promise<User> => {
     const response = await apiClient.post("/register", data);
     return response.data;
@@ -41,7 +42,7 @@ const LoginInput = z.object({
 });
 
 const RegisterUserInput = z.object({
-  name: z.string().min(1, "Name is required"),
+  username: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email format"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
