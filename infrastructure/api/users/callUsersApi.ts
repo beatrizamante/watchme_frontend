@@ -38,7 +38,7 @@ export const callUsersApi = {
   },
 
   delete: async (data: DeleteUserInput): Promise<void> => {
-    const response = await apiClient.delete(`/user?id=${data.id}`);
+    const response = await apiClient.delete(`/user/picture?id=${data.id}`);
     return response.data;
   },
 
@@ -52,11 +52,6 @@ export const callUsersApi = {
       const response = await apiClient.get(
         active !== undefined ? `/users?active=${active}` : "/users"
       );
-
-      console.log("Full Response:", response);
-      console.log("Response Status:", response.status);
-      console.log("Response Data:", response.data);
-      console.log("Response Data Type:", typeof response.data);
 
       let users = response.data;
       if (typeof response.data === "string") {

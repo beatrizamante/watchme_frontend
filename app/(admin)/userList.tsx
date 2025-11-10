@@ -15,7 +15,6 @@ export default function userList() {
   useEffect(() => {
     const fetchUsers = async () => {
       const allUsers = await list();
-      console.log("All users_______", allUsers);
       if (!allUsers) return;
       setUsers(allUsers);
     };

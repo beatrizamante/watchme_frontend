@@ -18,19 +18,23 @@ export default function PeopleManagement() {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ["image/*"],
-        copyToCacheDirectory: true,
+        copyToCacheDirectory: false,
+        multiple: false,
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        setSelectedImage(result.assets[0]);
-        Alert.alert(
-          "Person Image Selected",
-          `Selected: ${result.assets[0].name}`
+        const selectedFile = result.assets[0];
+
+        setSelectedImage(selectedFile);
+        console.log(
+          "Selected file URI type:",
+          selectedFile.uri.startsWith("data:") ? "base64 data URI" : "file URI"
         );
+        Alert.alert("Video Selected", `Selected: ${selectedFile.name}`);
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to select person image");
-      console.error("Error selecting image:", error);
+      Alert.alert("Error", "Failed to select video file");
+      console.error("Error selecting video:", error);
     }
   };
 
@@ -49,7 +53,7 @@ export default function PeopleManagement() {
       const imageFile = {
         uri: selectedImage.uri,
         type: selectedImage.mimeType || "image/jpeg",
-        name: selectedImage.name,
+        name: selectedImage.name || "image.jpeg",
       };
 
       const result = await create({
@@ -131,7 +135,7 @@ export default function PeopleManagement() {
             )}
           </View>
           <Text className="text-lg text-darker font-semibold text-center px-4">
-            Upload a clear photo of the person for facial recognition
+            Upload a clear photo of the person for reidentification
           </Text>
 
           {loading || !name.trim() || !selectedImage ? (

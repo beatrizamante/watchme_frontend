@@ -2,18 +2,12 @@ import z from "zod";
 import { apiClient } from "../_lib/apiClient";
 import Person from "../../../app/interfaces/person";
 import { FindPersonInVideoResponse } from "./response/findPersonInVideo";
+import { dataFileTypeCheck } from "../_lib/dataFileTypeCheck";
 
 export const callPeopleApi = {
   create: async (data: CreatePersonInput): Promise<Person> => {
-    const formData = new FormData();
-    formData.append("name", data.name);
-    formData.append("image", data.file);
-
-    const response = await apiClient.post("/person", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const payload = dataFileTypeCheck(data);
+    const response = await apiClient.post("/person", payload);
     return response.data;
   },
 

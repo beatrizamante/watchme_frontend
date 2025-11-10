@@ -1,48 +1,14 @@
 import z from "zod";
 import { apiClient } from "../_lib/apiClient";
 import Video from "../../../app/interfaces/video";
+import { dataFileTypeCheck } from "../_lib/dataFileTypeCheck";
 
 export const callVideoApi = {
   create: async (data: CreateVideoInput): Promise<Video> => {
-    if (!data.file.uri) {
-      throw new Error("File URI is missing");
-    }
+    const payload = dataFileTypeCheck(data);
 
-    if (data.file.uri.startsWith("data:")) {
-      const mimeMatch = data.file.uri.match(/data:([^;]+)/);
-      const mimeType = mimeMatch ? mimeMatch[1] : data.file.type || "video/mp4";
-      const fileName = data.file.name || "video.mp4";
-      const base64Data = data.file.uri.split(",")[1];
-
-      const jsonPayload = {
-        fileData: base64Data,
-        fileName: fileName,
-        mimeType: mimeType,
-      };
-
-      const response = await apiClient.post("/video", jsonPayload, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      return response.data;
-    } else {
-      const formData = new FormData();
-      const fileObject = {
-        uri: data.file.uri,
-        type: data.file.type || "video/mp4",
-        name: data.file.name || "video.mp4",
-      };
-
-      formData.append("file", fileObject as any);
-
-      const response = await apiClient.post("/video", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      return response.data;
-    }
+    const response = await apiClient.post("/video", payload);
+    return response.data;
   },
 
   delete: async (data: DeleteVideoInput): Promise<void> => {
