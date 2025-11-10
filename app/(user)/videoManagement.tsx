@@ -17,12 +17,19 @@ export default function VideoManagement() {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ["video/*"],
-        copyToCacheDirectory: true,
+        copyToCacheDirectory: false,
+        multiple: false,
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        setSelectedVideo(result.assets[0]);
-        Alert.alert("Video Selected", `Selected: ${result.assets[0].name}`);
+        const selectedFile = result.assets[0];
+
+        setSelectedVideo(selectedFile);
+        console.log(
+          "Selected file URI type:",
+          selectedFile.uri.startsWith("data:") ? "base64 data URI" : "file URI"
+        );
+        Alert.alert("Video Selected", `Selected: ${selectedFile.name}`);
       }
     } catch (error) {
       Alert.alert("Error", "Failed to select video file");
@@ -40,13 +47,11 @@ export default function VideoManagement() {
       const videoFile = {
         uri: selectedVideo.uri,
         type: selectedVideo.mimeType || "video/mp4",
-        name: selectedVideo.name,
+        name: selectedVideo.name || "video.mp4",
       };
 
       const result = await create({ file: videoFile });
-
       if (result) {
-        console.log("Video created successfully:", result);
         Alert.alert("Success", "Video uploaded successfully!", [
           { text: "OK", onPress: () => router.push("/(user)/videoList") },
         ]);
