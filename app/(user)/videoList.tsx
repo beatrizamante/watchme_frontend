@@ -14,15 +14,25 @@ export default function videoList() {
   const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
   const { selectedId, clear, store } = useSelectedItem();
-  const { list, deleteVideo } = useVideoApi();
+  const { list, deleteVideo, loading, error } = useVideoApi();
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchVideo = async () => {
-      const allVideos = await list();
-      if (!allVideos) return;
-      setVideos(allVideos);
+      try {
+        console.log("Fetching videos...");
+        const allVideos = await list();
+
+        if (allVideos && Array.isArray(allVideos)) {
+          setVideos(allVideos);
+          console.log("Videos set successfully:", allVideos.length);
+        } else {
+          console.warn("Invalid video data received:", allVideos);
+        }
+      } catch (err) {
+        console.error("Error fetching videos:", err);
+      }
     };
     fetchVideo();
   }, []);
@@ -39,7 +49,7 @@ export default function videoList() {
   };
 
   const handleDoubleClick = (id: string) => {
-    store(id);
+    store(Number(id));
     setActionModalVisible(true);
   };
 
@@ -76,6 +86,23 @@ export default function videoList() {
             <Text className="text-darker text-center text-lg font-semibold">
               Select a video to manage:
             </Text>
+
+            {loading && (
+              <Text className="text-gray-500 text-center">
+                Loading videos...
+              </Text>
+            )}
+
+            {error && (
+              <Text className="text-red-500 text-center">Error: {error}</Text>
+            )}
+
+            {!loading && !error && videos.length === 0 && (
+              <Text className="text-gray-500 text-center">
+                No videos found. Create your first video!
+              </Text>
+            )}
+
             <CardList data={videos} onDoubleClick={handleDoubleClick} />
             <Button content="Create new video!" onPress={createHandler} />
           </View>

@@ -15,7 +15,7 @@ import Input from "../../components/form/Input";
 import { useSelectedItem } from "../../stores/useSelectedItem";
 import DropDown from "../../components/form/Dropdown";
 import ConfirmationModal from "../../components/ConfirmationModal";
-import { useUsersApi } from "../hooks/userUsersApi";
+import { useUsersApi } from "../hooks/useUsersApi";
 import {
   CreateUserInput,
   UpdateUserInput,
@@ -165,7 +165,7 @@ export default function UserManagement() {
           </View>
 
           <Input
-            label="name"
+            label="username"
             value={username}
             handler={setUsername}
             isPassword={false}
@@ -186,41 +186,45 @@ export default function UserManagement() {
           {isEditing ? (
             <DropDown label="role" value={role} handler={setRole} />
           ) : (
-            <div></div>
+            <View></View>
           )}
 
-          <View className="w-full px-4 gap-4">
-            <TouchableOpacity
-              onPress={selectProfilePicture}
-              className="border-2 border-dashed border-gray-400 bg-gray-50 p-4 rounded-lg items-center"
-            >
-              <Text className="text-base text-gray-600 font-semibold">
-                {selectedProfilePicture
-                  ? "Change Profile Picture"
-                  : "Select Profile Picture (Optional)"}
-              </Text>
-              <Text className="text-sm text-gray-500 mt-1">
-                Tap to choose image from device
-              </Text>
-            </TouchableOpacity>
-
-            {selectedProfilePicture && (
-              <View className="bg-green-50 border border-green-200 p-3 rounded-lg">
-                <Text className="text-green-800 font-semibold text-sm">
-                  Selected Image:
+          {isEditing ? (
+            <View className="w-full px-4 gap-4">
+              <TouchableOpacity
+                onPress={selectProfilePicture}
+                className="border-2 border-dashed border-gray-400 bg-gray-50 p-4 rounded-lg items-center"
+              >
+                <Text className="text-base text-gray-600 font-semibold">
+                  {selectedProfilePicture
+                    ? "Change Profile Picture"
+                    : "Select Profile Picture (Optional)"}
                 </Text>
-                <Text className="text-green-700 text-sm mt-1">
-                  {selectedProfilePicture.name}
+                <Text className="text-sm text-gray-500 mt-1">
+                  Tap to choose image from device
                 </Text>
-              </View>
-            )}
+              </TouchableOpacity>
 
-            {error && (
-              <View className="bg-red-50 border border-red-200 p-3 rounded-lg">
-                <Text className="text-red-800 text-sm">Error: {error}</Text>
-              </View>
-            )}
-          </View>
+              {selectedProfilePicture && (
+                <View className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                  <Text className="text-green-800 font-semibold text-sm">
+                    Selected Image:
+                  </Text>
+                  <Text className="text-green-700 text-sm mt-1">
+                    {selectedProfilePicture.name}
+                  </Text>
+                </View>
+              )}
+
+              {error && (
+                <View className="bg-red-50 border border-red-200 p-3 rounded-lg">
+                  <Text className="text-red-800 text-sm">Error: {error}</Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <View></View>
+          )}
 
           {isEditing ? (
             <View className="flex flex-row justify-between items-center gap-4 mt-4">

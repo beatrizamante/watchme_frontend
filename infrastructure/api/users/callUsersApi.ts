@@ -48,8 +48,37 @@ export const callUsersApi = {
   },
 
   list: async (active?: boolean): Promise<User[]> => {
-    const response = await apiClient.get(`/users?active=${active}`);
-    return response.data;
+    try {
+      const response = await apiClient.get(
+        active !== undefined ? `/users?active=${active}` : "/users"
+      );
+
+      console.log("Full Response:", response);
+      console.log("Response Status:", response.status);
+      console.log("Response Data:", response.data);
+      console.log("Response Data Type:", typeof response.data);
+
+      let users = response.data;
+      if (typeof response.data === "string") {
+        try {
+          users = JSON.parse(response.data);
+          console.log("Parsed users:", users);
+        } catch (parseError) {
+          console.error("Failed to parse response data:", parseError);
+          throw new Error("Invalid JSON response from server");
+        }
+      }
+
+      return users;
+    } catch (error) {
+      console.error("Error in list users API:", error);
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as any;
+        console.log("Error Response Status:", axiosError.response?.status);
+        console.log("Error Response Data:", axiosError.response?.data);
+      }
+      throw error;
+    }
   },
 };
 
