@@ -23,7 +23,7 @@ export default function CardList({ data, onDoubleClick }: ListProps) {
             onPress={onDoubleClick}
             date={item.created_at}
             user={item.username}
-            image_path={require(item.path)}
+            image_path={require(`../../assets/manage_people.png`)}
           />
         )}
         nestedScrollEnabled={true}

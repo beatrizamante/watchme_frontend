@@ -28,7 +28,6 @@ export default function UserLayout() {
       <Stack.Screen name="peopleList" options={{ headerShown: false }} />
       <Stack.Screen name="peopleManagement" options={{ headerShown: false }} />
       <Stack.Screen name="searchPerson" options={{ headerShown: false }} />
-      <Stack.Screen name="findPeople" options={{ headerShown: false }} />
     </Stack>
   );
 }

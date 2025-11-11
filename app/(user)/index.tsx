@@ -18,8 +18,7 @@ export default function UserHome() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex flex-col gap-6">
-          <RoleBasedNavigation />
-          <View className="bg-semilight border border-semidark rounded-lg p-6 mt-4">
+          <View className="bg-semilight p-6 mt-4 mb-4">
             <Text className="text-2xl font-bold text-darker mb-2">
               Welcome back, {user?.name}!
             </Text>
@@ -28,12 +27,19 @@ export default function UserHome() {
                 ? "You have admin access to all system features"
                 : "Manage your videos and people for AI recognition"}
             </Text>
+            <RoleBasedNavigation />
           </View>
 
-          <View className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+          <View className="bg-semilight border border-semidark rounded-lg p-6 mt-4">
             <Text className="text-blue-800 font-semibold text-base">
               💡 Now you can create and manage your own people embeddings!
               Upload clear photos for better recognition accuracy.
+            </Text>
+          </View>
+          <View className="bg-semilight p-6 mt-4">
+            <Text className="text-darker text-lg">
+              If you can’t find a specific person’s hash, please, contact your
+              administrative user. They’ll be the one to create one for you.
             </Text>
           </View>
         </View>

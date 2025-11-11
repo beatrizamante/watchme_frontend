@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import React, { useEffect } from "react";
 import Footer from "../components/Footer";
 import Input from "../components/form/Input";
@@ -6,6 +6,7 @@ import Button from "../components/Button";
 import { useRouter } from "expo-router";
 import { useAuth } from "../stores/useAuth";
 import { useLoginApi } from "./hooks/useLoginApi";
+import { showPlatformAlert } from "../utils/alertUtils";
 
 export default function Home() {
   const router = useRouter();
@@ -27,8 +28,8 @@ export default function Home() {
       const { user } = response;
 
       if (!user || user === null || !user.username) {
-        Alert.alert(
-          "Login Error",
+        showPlatformAlert(
+          "❌ Login Error",
           "There was an error logging in. Does your user exist? Please, create an account."
         );
         return;
@@ -47,7 +48,10 @@ export default function Home() {
         }
       }, 100);
     } catch (error) {
-      Alert.alert("Login Error", "An unexpected error occurred during login.");
+      showPlatformAlert(
+        "❌ Login Error",
+        "An unexpected error occurred during login."
+      );
       console.error("Login error:", error);
     }
   };

@@ -8,15 +8,21 @@ export default function AdminLayout() {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (!isAuthenticated || user?.role?.toLowerCase() !== "admin") {
+      if (!isAuthenticated) {
         router.replace("/");
+      } else if (user?.role?.toLowerCase() !== "admin") {
+        router.replace("/(user)");
       }
     }, 100);
 
     return () => clearTimeout(timeoutId);
   }, [isAuthenticated, user, router]);
 
-  if (!isAuthenticated || user?.role?.toLowerCase() !== "admin") {
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  if (user?.role?.toLowerCase() !== "admin") {
     return null;
   }
 
@@ -29,7 +35,6 @@ export default function AdminLayout() {
       <Stack.Screen name="peopleManagement" options={{ headerShown: false }} />
       <Stack.Screen name="videoList" options={{ headerShown: false }} />
       <Stack.Screen name="videoManagement" options={{ headerShown: false }} />
-      <Stack.Screen name="findPeople" options={{ headerShown: false }} />
       <Stack.Screen name="searchPerson" options={{ headerShown: false }} />
     </Stack>
   );

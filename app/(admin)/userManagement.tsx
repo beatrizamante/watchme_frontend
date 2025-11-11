@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
+import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
@@ -20,6 +13,7 @@ import {
   CreateUserInput,
   UpdateUserInput,
 } from "../../infrastructure/api/users/callUsersApi";
+import { showPlatformAlert } from "../../utils/alertUtils";
 
 export default function UserManagement() {
   const router = useRouter();
@@ -67,23 +61,75 @@ export default function UserManagement() {
   }, [selectedId]);
 
   const handleConfirmDelete = async () => {
-    const userData: UpdateUserInput = {
-      id: Number(selectedId!),
-      active: false,
-    };
+    try {
+      const userData: UpdateUserInput = {
+        id: Number(selectedId!),
+        active: false,
+      };
 
-    const success = await update(userData);
-    if (success) {
-      clear();
-      console.log("DELETE CONFIRMED!");
+      const success = await update(userData);
+      if (success) {
+        showPlatformAlert(
+          "✅ Success",
+          `User "${username}" has been deactivated successfully.`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                clear();
+                console.log("DELETE CONFIRMED!");
+                setConfirmModalVisible(false);
+                router.replace("/(admin)/userList");
+              },
+            },
+          ]
+        );
+      } else {
+        showPlatformAlert(
+          "❌ Deactivation Failed",
+          "The user could not be deactivated. Please try again."
+        );
+        setConfirmModalVisible(false);
+      }
+    } catch (error: any) {
+      console.error("Error deactivating user:", error);
+      const errorMessage =
+        error?.message ||
+        "An unexpected error occurred while deactivating the user.";
+      showPlatformAlert("❌ Deactivation Error", errorMessage);
       setConfirmModalVisible(false);
-      router.replace("/(admin)/userList");
     }
   };
 
   const handleUpdate = async () => {
     if (!originalUser) {
-      Alert.alert("Error", "Original user data not found");
+      showPlatformAlert("❌ Error", "Original user data not found");
+      return;
+    }
+
+    // Validation for changed fields
+    if (username !== originalUser.username && username.trim().length < 3) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Username must be at least 3 characters long."
+      );
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email !== originalUser.email && !emailRegex.test(email.trim())) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Please enter a valid email address."
+      );
+      return;
+    }
+
+    if (password.trim() !== "" && password.length < 6) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Password must be at least 6 characters long."
+      );
       return;
     }
 
@@ -107,16 +153,40 @@ export default function UserManagement() {
     const hasChanges = Object.keys(userData).length > 1;
 
     if (!hasChanges) {
-      Alert.alert("No Changes", "No changes detected to update.");
+      showPlatformAlert("ℹ️ No Changes", "No changes detected to update.");
       return;
     }
 
-    console.log("Sending update data:", userData);
-    const result = await update(userData);
+    try {
+      console.log("Sending update data:", userData);
+      const result = await update(userData);
 
-    if (result) {
-      clear();
-      router.replace("/(admin)/userList");
+      if (result) {
+        showPlatformAlert(
+          "✅ Success",
+          `User "${username}" updated successfully!`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                clear();
+                router.replace("/(admin)/userList");
+              },
+            },
+          ]
+        );
+      } else {
+        showPlatformAlert(
+          "❌ Update Failed",
+          "The user could not be updated. Please try again."
+        );
+      }
+    } catch (error: any) {
+      console.error("Error updating user:", error);
+      const errorMessage =
+        error?.message ||
+        "An unexpected error occurred while updating the user.";
+      showPlatformAlert("❌ Update Error", errorMessage);
     }
   };
 
@@ -126,22 +196,75 @@ export default function UserManagement() {
   };
 
   const handleCreate = async () => {
+    // Comprehensive validation
     if (!username.trim() || !email.trim() || !password.trim()) {
-      Alert.alert("Validation Error", "Please fill in all required fields.");
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Please fill in all required fields."
+      );
       return;
     }
 
-    const userData: CreateUserInput = {
-      username: username.trim(),
-      email: email.trim(),
-      password,
-    };
+    if (username.trim().length < 3) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Username must be at least 3 characters long."
+      );
+      return;
+    }
 
-    const result = await create(userData);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Please enter a valid email address."
+      );
+      return;
+    }
 
-    if (result) {
-      clear();
-      router.replace("/(admin)/userList");
+    if (password.length < 6) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Password must be at least 6 characters long."
+      );
+      return;
+    }
+
+    try {
+      const userData: CreateUserInput = {
+        username: username.trim(),
+        email: email.trim(),
+        password,
+      };
+
+      const result = await create(userData);
+
+      if (result) {
+        showPlatformAlert(
+          "✅ Success",
+          `User "${username.trim()}" created successfully!`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                clear();
+                router.replace("/(admin)/userList");
+              },
+            },
+          ]
+        );
+      } else {
+        showPlatformAlert(
+          "❌ Creation Failed",
+          "The user could not be created. Email might already exist."
+        );
+      }
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      const errorMessage =
+        error?.message ||
+        "An unexpected error occurred while creating the user.";
+      showPlatformAlert("❌ Creation Error", errorMessage);
     }
   };
 

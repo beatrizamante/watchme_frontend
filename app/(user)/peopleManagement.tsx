@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
@@ -6,6 +6,7 @@ import Button from "../../components/Button";
 import Footer from "../../components/Footer";
 import Input from "../../components/form/Input";
 import { usePeopleApi } from "../hooks/usePeopleApi";
+import { showPlatformAlert } from "../../utils/alertUtils";
 
 export default function PeopleManagement() {
   const router = useRouter();
@@ -25,27 +26,69 @@ export default function PeopleManagement() {
       if (!result.canceled && result.assets && result.assets[0]) {
         const selectedFile = result.assets[0];
 
+        // Validate file type
+        if (!selectedFile.mimeType?.startsWith("image/")) {
+          showPlatformAlert(
+            "❌ Invalid File",
+            "Please select a valid image file (JPG, PNG, etc.)"
+          );
+          return;
+        }
+
         setSelectedImage(selectedFile);
         console.log(
           "Selected file URI type:",
           selectedFile.uri.startsWith("data:") ? "base64 data URI" : "file URI"
         );
-        Alert.alert("Video Selected", `Selected: ${selectedFile.name}`);
+        showPlatformAlert(
+          "✅ Image Selected",
+          `Selected: ${selectedFile.name}`
+        );
+      } else if (result.canceled) {
+        console.log("Image selection cancelled by user");
       }
-    } catch (error) {
-      Alert.alert("Error", "Failed to select video file");
-      console.error("Error selecting video:", error);
+    } catch (error: any) {
+      console.error("Error selecting image:", error);
+      showPlatformAlert(
+        "❌ Selection Error",
+        "Failed to select image file. Please try again."
+      );
     }
   };
 
   const handleCreate = async () => {
+    // Validation
     if (!name.trim()) {
-      Alert.alert("Validation Error", "Please enter a person's name");
+      showPlatformAlert("❌ Validation Error", "Please enter a person's name");
+      return;
+    }
+
+    if (name.trim().length < 2) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Person's name must be at least 2 characters long"
+      );
       return;
     }
 
     if (!selectedImage) {
-      Alert.alert("Validation Error", "Please select a person's image");
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Please select a person's image"
+      );
+      return;
+    }
+
+    // Validate image size (optional)
+    const maxSizeInMB = 10;
+    if (selectedImage.size && selectedImage.size > maxSizeInMB * 1024 * 1024) {
+      showPlatformAlert(
+        "❌ File Too Large",
+        `Image file must be smaller than ${maxSizeInMB}MB. Current size: ${(
+          selectedImage.size /
+          (1024 * 1024)
+        ).toFixed(2)}MB`
+      );
       return;
     }
 
@@ -62,15 +105,35 @@ export default function PeopleManagement() {
       });
 
       if (result) {
-        Alert.alert("Success", "Person created successfully!", [
-          { text: "OK", onPress: () => router.back() },
-        ]);
-        setName("");
-        setSelectedImage(null);
+        showPlatformAlert(
+          "✅ Success",
+          `Person "${name.trim()}" created successfully!`,
+          [
+            {
+              text: "Create Another",
+              onPress: () => {
+                setName("");
+                setSelectedImage(null);
+              },
+            },
+            { text: "Go Back", onPress: () => router.back() },
+          ]
+        );
+      } else {
+        showPlatformAlert(
+          "❌ Creation Failed",
+          "The person could not be created. Please try again."
+        );
       }
-    } catch (error) {
-      Alert.alert("Error", "Failed to create person");
+    } catch (error: any) {
       console.error("Error creating person:", error);
+      const errorMessage =
+        error?.message ||
+        "An unexpected error occurred while creating the person.";
+      showPlatformAlert("❌ Creation Error", errorMessage, [
+        { text: "Retry", onPress: () => handleCreate() },
+        { text: "Cancel", style: "cancel" },
+      ]);
     }
   };
 

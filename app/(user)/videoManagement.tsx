@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
@@ -6,6 +6,7 @@ import Button from "../../components/Button";
 import Footer from "../../components/Footer";
 import VideoIcon from "../../components/videoIcon";
 import { useVideoApi } from "../hooks/useVideoApi";
+import { showPlatformAlert } from "../../utils/alertUtils";
 
 export default function VideoManagement() {
   const { create, loading, error } = useVideoApi();
@@ -24,22 +25,55 @@ export default function VideoManagement() {
       if (!result.canceled && result.assets && result.assets[0]) {
         const selectedFile = result.assets[0];
 
+        // Validate file type
+        if (!selectedFile.mimeType?.startsWith("video/")) {
+          showPlatformAlert(
+            "❌ Invalid File",
+            "Please select a valid video file."
+          );
+          return;
+        }
+
         setSelectedVideo(selectedFile);
         console.log(
           "Selected file URI type:",
           selectedFile.uri.startsWith("data:") ? "base64 data URI" : "file URI"
         );
-        Alert.alert("Video Selected", `Selected: ${selectedFile.name}`);
+        showPlatformAlert(
+          "✅ Video Selected",
+          `Selected: ${selectedFile.name}`
+        );
+      } else if (result.canceled) {
+        console.log("Video selection cancelled by user");
       }
-    } catch (error) {
-      Alert.alert("Error", "Failed to select video file");
+    } catch (error: any) {
       console.error("Error selecting video:", error);
+      showPlatformAlert(
+        "❌ Selection Error",
+        "Failed to select video file. Please try again."
+      );
     }
   };
 
   const handleCreate = async () => {
     if (!selectedVideo) {
-      Alert.alert("No Video Selected", "Please select a video file first");
+      showPlatformAlert(
+        "❌ No Video Selected",
+        "Please select a video file first"
+      );
+      return;
+    }
+
+    // Validate file size (optional - adjust limit as needed)
+    const maxSizeInMB = 100;
+    if (selectedVideo.size && selectedVideo.size > maxSizeInMB * 1024 * 1024) {
+      showPlatformAlert(
+        "❌ File Too Large",
+        `Video file must be smaller than ${maxSizeInMB}MB. Current size: ${(
+          selectedVideo.size /
+          (1024 * 1024)
+        ).toFixed(2)}MB`
+      );
       return;
     }
 
@@ -52,13 +86,24 @@ export default function VideoManagement() {
 
       const result = await create({ file: videoFile });
       if (result) {
-        Alert.alert("Success", "Video uploaded successfully!", [
+        showPlatformAlert("✅ Success", "Video uploaded successfully!", [
           { text: "OK", onPress: () => router.push("/(user)/videoList") },
         ]);
+      } else {
+        showPlatformAlert(
+          "❌ Upload Failed",
+          "The video could not be uploaded. Please try again."
+        );
       }
-    } catch (error) {
-      Alert.alert("Error", "Failed to upload video");
+    } catch (error: any) {
       console.error("Error creating video:", error);
+      const errorMessage =
+        error?.message ||
+        "An unexpected error occurred while uploading the video.";
+      showPlatformAlert("❌ Upload Error", errorMessage, [
+        { text: "Retry", onPress: () => handleCreate() },
+        { text: "Cancel", style: "cancel" },
+      ]);
     }
   };
   const handleBack = () => {

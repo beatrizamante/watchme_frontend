@@ -1,4 +1,4 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, Alert } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import Button from "../../components/Button";
@@ -68,10 +68,40 @@ export default function videoList() {
   };
 
   const handleConfirmDelete = async () => {
-    await deleteVideo(Number(selectedId!));
-    clear();
-    console.log("DELETE CONFIRMED!");
-    setConfirmModalVisible(false);
+    try {
+      const success = await deleteVideo(Number(selectedId!));
+
+      if (success) {
+        // Refresh the video list after successful deletion
+        const updatedVideos = await list();
+        if (updatedVideos && Array.isArray(updatedVideos)) {
+          setVideos(updatedVideos);
+        }
+
+        Alert.alert("✅ Success", "Video deleted successfully!", [
+          {
+            text: "OK",
+            onPress: () => {
+              clear();
+              setConfirmModalVisible(false);
+            },
+          },
+        ]);
+      } else {
+        Alert.alert(
+          "❌ Deletion Failed",
+          "The video could not be deleted. Please try again."
+        );
+        setConfirmModalVisible(false);
+      }
+    } catch (error: any) {
+      console.error("Error deleting video:", error);
+      const errorMessage =
+        error?.message ||
+        "An unexpected error occurred while deleting the video.";
+      Alert.alert("❌ Deletion Error", errorMessage);
+      setConfirmModalVisible(false);
+    }
   };
 
   const createHandler = () => {
