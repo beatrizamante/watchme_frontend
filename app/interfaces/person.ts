@@ -7,7 +7,7 @@ export default interface Person {
 
 export interface PersonDetection {
   timestamp: number;
-  boundingBox: {
+  bbox: {
     x: number;
     y: number;
     width: number;

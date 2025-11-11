@@ -2,21 +2,14 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import { usePersonTracker } from "../app/hooks/usePersonTracker";
 
 interface TrackingContextType {
-  // Selection flow
   selectedVideoId: number | null;
   selectedPersonId: string | null;
   setSelectedVideo: (id: number) => void;
   setSelectedPerson: (id: string) => void;
   clearSelection: () => void;
-
-  // Tracking state
   isTrackingMode: boolean;
   setTrackingMode: (enabled: boolean) => void;
-
-  // WebSocket functionality
   tracker: ReturnType<typeof usePersonTracker>;
-
-  // Flow helpers
   canStartTracking: boolean;
   startTracking: () => void;
 }
@@ -34,7 +27,7 @@ export const TrackingProvider: React.FC<{ children: ReactNode }> = ({
 
   const setSelectedVideo = (id: number) => {
     setSelectedVideoId(id);
-    setSelectedPersonId(null); // Reset person when video changes
+    setSelectedPersonId(null);
   };
 
   const setSelectedPerson = (id: string) => {
@@ -53,7 +46,7 @@ export const TrackingProvider: React.FC<{ children: ReactNode }> = ({
 
   const startTracking = () => {
     if (canStartTracking) {
-      tracker.connect(selectedVideoId!, selectedPersonId!);
+      tracker.connect(selectedPersonId!);
       setIsTrackingMode(true);
     }
   };

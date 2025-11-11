@@ -32,25 +32,22 @@ export const usePersonTracker = () => {
   const [trackingHistory, setTrackingHistory] = useState<TrackingData[]>([]);
   const ws = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
-  const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
 
   const connect = useCallback(
-    (videoId: number, personId: string) => {
+    (personId: string) => {
       if (ws.current?.readyState === WebSocket.OPEN) {
         disconnect();
       }
 
       setStatus((prev) => ({ ...prev, connecting: true, error: null }));
-      setSelectedVideoId(videoId);
       setSelectedPersonId(personId);
 
       try {
-        // Create WebSocket connection to your tracker endpoint
         const wsUrl = `${config.http.baseUrl.replace(
           "http",
           "ws"
-        )}/ws/tracker-person?videoId=${videoId}&personId=${personId}`;
+        )}/ws/video-track?personId=${personId}`;
         ws.current = new WebSocket(wsUrl);
 
         ws.current.onopen = () => {
@@ -69,7 +66,7 @@ export const usePersonTracker = () => {
             console.log("Received tracking data:", data);
 
             setStatus((prev) => ({ ...prev, lastMessage: data }));
-            setTrackingHistory((prev) => [...prev, data].slice(-100)); // Keep last 100 detections
+            setTrackingHistory((prev) => [...prev, data].slice(-100));
           } catch (error) {
             console.error("Error parsing WebSocket message:", error);
           }
@@ -83,10 +80,9 @@ export const usePersonTracker = () => {
             connecting: false,
           }));
 
-          // Auto-reconnect if not manually closed
-          if (event.code !== 1000 && selectedVideoId && selectedPersonId) {
+          if (event.code !== 1000 && selectedPersonId) {
             reconnectTimeoutRef.current = setTimeout(() => {
-              connect(selectedVideoId, selectedPersonId);
+              connect(selectedPersonId);
             }, 3000);
           }
         };
@@ -107,7 +103,7 @@ export const usePersonTracker = () => {
         }));
       }
     },
-    [selectedVideoId, selectedPersonId]
+    [selectedPersonId]
   );
 
   const disconnect = useCallback(() => {
@@ -126,7 +122,6 @@ export const usePersonTracker = () => {
       error: null,
       lastMessage: null,
     });
-    setSelectedVideoId(null);
     setSelectedPersonId(null);
     setTrackingHistory([]);
   }, []);
@@ -137,7 +132,6 @@ export const usePersonTracker = () => {
     }
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       disconnect();
@@ -147,7 +141,6 @@ export const usePersonTracker = () => {
   return {
     status,
     trackingHistory,
-    selectedVideoId,
     selectedPersonId,
     connect,
     disconnect,

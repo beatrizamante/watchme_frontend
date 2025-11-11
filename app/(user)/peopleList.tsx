@@ -45,16 +45,14 @@ export default function peopleList() {
   const handleStartLiveTracking = () => {
     if (canStartTracking) {
       startTracking();
-      Alert.alert(
-        "Live Tracking Started",
-        "WebSocket connection established. You'll see real-time person detection.",
-        [{ text: "OK", onPress: () => router.push("/(user)/searchPerson") }]
-      );
+      // Navigate to live tracking page
+      router.push("/(user)/liveTracking");
     }
   };
 
   const handleSearchInVideos = () => {
-    if (selectedPersonId) {
+    if (selectedPersonId && selectedVideoId) {
+      // Navigate to uploaded video search page
       router.push("/(user)/searchPerson");
     }
   };
@@ -159,22 +157,40 @@ export default function peopleList() {
                 Choose tracking method:
               </Text>
 
-              <Button
-                content="🔴 Start Live Tracking (WebSocket)"
-                onPress={handleStartLiveTracking}
-              />
+              <View className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <Text className="text-red-800 font-semibold mb-2">
+                  🔴 Live Feed Tracking (WebSocket)
+                </Text>
+                <Text className="text-red-700 text-sm mb-3">
+                  For real-time tracking from a live camera feed. Requires you
+                  to connect a live video source.
+                </Text>
+                <Button
+                  content="Start Live Tracking"
+                  onPress={handleStartLiveTracking}
+                />
+              </View>
 
-              <TouchableOpacity
-                onPress={handleSearchInVideos}
-                className="bg-gray-100 border border-gray-300 rounded-lg p-4"
-              >
-                <View className="flex-row items-center justify-center">
-                  <Ionicons name="search" size={20} color="#666" />
-                  <Text className="text-gray-700 font-semibold ml-2">
-                    Search in Saved Videos
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              <View className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <Text className="text-blue-800 font-semibold mb-2">
+                  📹 Search in Uploaded Video
+                </Text>
+                <Text className="text-blue-700 text-sm mb-3">
+                  Search for this person in the uploaded video file. Shows all
+                  detected instances with timestamps.
+                </Text>
+                <TouchableOpacity
+                  onPress={handleSearchInVideos}
+                  className="bg-blue-100 border border-blue-300 rounded-lg p-3"
+                >
+                  <View className="flex-row items-center justify-center">
+                    <Ionicons name="search" size={20} color="#3B82F6" />
+                    <Text className="text-blue-800 font-semibold ml-2">
+                      Search in Video
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 

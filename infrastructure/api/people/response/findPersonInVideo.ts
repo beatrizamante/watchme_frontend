@@ -1,10 +1,8 @@
+import { Video } from "expo-av";
 import Person from "../../../../app/interfaces/person";
 
 export interface FindPersonInVideoResponse {
   person: Person;
-  video: {
-    id: number;
-    path: string;
-  };
+  video: Video;
   matches: any[];
 }

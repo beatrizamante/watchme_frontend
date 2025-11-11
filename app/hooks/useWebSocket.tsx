@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { PersonDetection } from "../interfaces/person";
 
 interface WebSocketMessage {
   type: "detection" | "status" | "error";
@@ -61,7 +60,6 @@ export const useWebSocket = ({
         setIsConnecting(false);
         setReconnectAttempts(0);
 
-        // Send initial configuration if person is selected
         if (selectedPersonId) {
           wsRef.current?.send(
             JSON.stringify({
@@ -81,7 +79,7 @@ export const useWebSocket = ({
             case "detection":
               const detection = message.data as DetectionData;
               setLastDetection(detection);
-              setDetections((prev) => [...prev.slice(-9), detection]); // Keep last 10 detections
+              setDetections((prev) => [...prev.slice(-9), detection]);
               onDetection?.(detection);
               break;
 
@@ -104,7 +102,6 @@ export const useWebSocket = ({
         setIsConnected(false);
         setIsConnecting(false);
 
-        // Attempt to reconnect if enabled and not manually closed
         if (
           enabled &&
           event.code !== 1000 &&
@@ -173,7 +170,6 @@ export const useWebSocket = ({
     [sendMessage]
   );
 
-  // Effect to handle connection based on enabled state
   useEffect(() => {
     if (enabled && !isConnected && !isConnecting) {
       connect();
@@ -188,7 +184,6 @@ export const useWebSocket = ({
     };
   }, [enabled, connect, disconnect, isConnected, isConnecting]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       disconnect();
