@@ -132,16 +132,15 @@ export default function SearchPerson() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex flex-col gap-4 mb-2">
-          <View className="flex flex-row justify-between items-center w-full px-7">
-            <TouchableOpacity className="flex w-[140px]" onPress={handleBack}>
-              <Text className="text-lg text-darker font-semibold text-center">
-                Back
-              </Text>
+          <View className="flex flex-row justify-start items-center w-full pl-2 mb-4">
+            <TouchableOpacity className="flex" onPress={handleBack}>
+              <Text className="text-lg text-darker font-semibold">Back</Text>
             </TouchableOpacity>
+          </View>
+          <View className="flex justify-center items-center w-full mb-4">
             <Text className="text-darker text-center font-semibold">
               Search Results
             </Text>
-            <View className="w-[140px]" />
           </View>
 
           <View

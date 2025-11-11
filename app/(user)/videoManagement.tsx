@@ -25,7 +25,6 @@ export default function VideoManagement() {
       if (!result.canceled && result.assets && result.assets[0]) {
         const selectedFile = result.assets[0];
 
-        // Validate file type
         if (!selectedFile.mimeType?.startsWith("video/")) {
           showPlatformAlert(
             "❌ Invalid File",
@@ -64,7 +63,6 @@ export default function VideoManagement() {
       return;
     }
 
-    // Validate file size (optional - adjust limit as needed)
     const maxSizeInMB = 100;
     if (selectedVideo.size && selectedVideo.size > maxSizeInMB * 1024 * 1024) {
       showPlatformAlert(
@@ -106,9 +104,6 @@ export default function VideoManagement() {
       ]);
     }
   };
-  const handleBack = () => {
-    router.back();
-  };
 
   return (
     <>
@@ -122,11 +117,9 @@ export default function VideoManagement() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex flex-col justify-center items-center gap-4 mb-2">
-          <View className="flex flex-row justify-between items-center w-full px-7">
-            <TouchableOpacity className="flex w-[140px]" onPress={handleBack}>
-              <Text className="text-lg text-darker font-semibold text-center">
-                Back
-              </Text>
+          <View className="flex flex-row justify-start items-center w-full pl-2">
+            <TouchableOpacity className="flex" onPress={() => router.back()}>
+              <Text className="text-lg text-darker font-semibold">Back</Text>
             </TouchableOpacity>
           </View>
 

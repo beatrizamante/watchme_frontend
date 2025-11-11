@@ -137,10 +137,6 @@ export default function PeopleManagement() {
     }
   };
 
-  const handleBack = () => {
-    router.back();
-  };
-
   return (
     <>
       <ScrollView
@@ -153,11 +149,9 @@ export default function PeopleManagement() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex flex-col justify-center items-center gap-4 mb-2">
-          <View className="flex flex-row justify-between items-center w-full px-7">
-            <TouchableOpacity className="flex w-[140px]" onPress={handleBack}>
-              <Text className="text-lg text-darker font-semibold text-center">
-                Back
-              </Text>
+          <View className="flex flex-row justify-start items-center w-full pl-2">
+            <TouchableOpacity className="flex" onPress={() => router.back()}>
+              <Text className="text-lg text-darker font-semibold">Back</Text>
             </TouchableOpacity>
           </View>
 

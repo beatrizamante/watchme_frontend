@@ -1,10 +1,9 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import Footer from "../../components/Footer";
 import Button from "../../components/Button";
 import { useRouter } from "expo-router";
 import ListDelete from "../../components/list/DeleteList";
-import { useSelectedItem } from "../../stores/useSelectedItem";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import Person from "../interfaces/person";
 import { usePeopleApi } from "../hooks/usePeopleApi";
@@ -56,6 +55,11 @@ export default function peopleList() {
       >
         <View className="flex-1 justify-between items-center px-6">
           <View className="flex flex-col justify-center items-center gap-4 mb-2">
+            <View className="flex flex-row justify-start items-center w-full pl-2">
+              <TouchableOpacity className="flex" onPress={() => router.back()}>
+                <Text className="text-lg text-darker font-semibold">Back</Text>
+              </TouchableOpacity>
+            </View>
             <Text className="text-darker text-center text-lg font-semibold">
               Click on the icon to delete:
             </Text>

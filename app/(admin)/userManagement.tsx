@@ -18,7 +18,7 @@ import { showPlatformAlert } from "../../utils/alertUtils";
 export default function UserManagement() {
   const router = useRouter();
   const { selectedId, clear } = useSelectedItem();
-  const { create, update, find, error } = useUsersApi();
+  const { create, update, find } = useUsersApi();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"user" | "admin">("user");
@@ -107,7 +107,6 @@ export default function UserManagement() {
       return;
     }
 
-    // Validation for changed fields
     if (username !== originalUser.username && username.trim().length < 3) {
       showPlatformAlert(
         "❌ Validation Error",
@@ -196,7 +195,6 @@ export default function UserManagement() {
   };
 
   const handleCreate = async () => {
-    // Comprehensive validation
     if (!username.trim() || !email.trim() || !password.trim()) {
       showPlatformAlert(
         "❌ Validation Error",
@@ -287,16 +285,18 @@ export default function UserManagement() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex flex-col justify-center items-center gap-4 mb-2">
-          <View className="flex flex-row justify-between items-center w-full px-7">
-            <TouchableOpacity className="flex w-[140px]" onPress={handleBack}>
-              <Text className="text-lg text-darker font-semibold text-center">
-                Back
-              </Text>
+          <View className="flex flex-row justify-start items-center w-full pl-2 mb-4">
+            <TouchableOpacity className="flex" onPress={handleBack}>
+              <Text className="text-lg text-darker font-semibold">Back</Text>
             </TouchableOpacity>
-            <Text className="text-darker text-center font-semibold">
-              {isEditing ? `Editing ${username}` : ""}
-            </Text>
           </View>
+          {isEditing && (
+            <View className="flex justify-center items-center w-full mb-4">
+              <Text className="text-darker text-center font-semibold">
+                Editing {username}
+              </Text>
+            </View>
+          )}
 
           <Input
             label="username"

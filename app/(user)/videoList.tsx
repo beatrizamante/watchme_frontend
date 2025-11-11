@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Alert } from "react-native";
+import { View, Text, ScrollView, Alert, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import Button from "../../components/Button";
@@ -21,6 +21,9 @@ export default function videoList() {
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
 
   useEffect(() => {
+    // Clear any previously selected item when entering the page
+    clear();
+
     const fetchVideo = async () => {
       try {
         console.log("Fetching videos...");
@@ -38,12 +41,6 @@ export default function videoList() {
     };
     fetchVideo();
   }, []);
-
-  useEffect(() => {
-    if (selectedId) {
-      setActionModalVisible(true);
-    }
-  }, [selectedId]);
 
   const handleFind = () => {
     console.log("Find action - navigating to person selection");
@@ -72,34 +69,13 @@ export default function videoList() {
       const success = await deleteVideo(Number(selectedId!));
 
       if (success) {
-        // Refresh the video list after successful deletion
         const updatedVideos = await list();
         if (updatedVideos && Array.isArray(updatedVideos)) {
           setVideos(updatedVideos);
         }
-
-        Alert.alert("✅ Success", "Video deleted successfully!", [
-          {
-            text: "OK",
-            onPress: () => {
-              clear();
-              setConfirmModalVisible(false);
-            },
-          },
-        ]);
-      } else {
-        Alert.alert(
-          "❌ Deletion Failed",
-          "The video could not be deleted. Please try again."
-        );
-        setConfirmModalVisible(false);
       }
     } catch (error: any) {
       console.error("Error deleting video:", error);
-      const errorMessage =
-        error?.message ||
-        "An unexpected error occurred while deleting the video.";
-      Alert.alert("❌ Deletion Error", errorMessage);
       setConfirmModalVisible(false);
     }
   };
@@ -121,6 +97,11 @@ export default function videoList() {
       >
         <View className="flex-1 justify-between items-center px-6">
           <View className="flex flex-col justify-center items-center gap-4 mb-2">
+            <View className="flex flex-row justify-start items-center w-full pl-2">
+              <TouchableOpacity className="flex" onPress={() => router.back()}>
+                <Text className="text-lg text-darker font-semibold">Back</Text>
+              </TouchableOpacity>
+            </View>
             <Text className="text-darker text-center text-lg font-semibold">
               Select a video to manage:
             </Text>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Camera Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            border-radius: 8px;
+            background: #000;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .start { background: #4CAF50; color: white; }
+        .start:hover { background: #45a049; }
+        .stop { background: #f44336; color: white; }
+        .stop:hover { background: #da190b; }
+        .capture { background: #2196F3; color: white; }
+        .capture:hover { background: #0b7dda; }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .status.connected { background: #d4edda; color: #155724; }
+        .status.disconnected { background: #f8d7da; color: #721c24; }
+        .status.connecting { background: #fff3cd; color: #856404; }
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WebSocket Camera Tracker</h1>
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+
+        <div class="controls">
+            <button id="startBtn" class="start">Start Camera</button>
+            <button id="stopBtn" class="stop" disabled>Stop Camera</button>
+            <button id="connectBtn" class="capture" disabled>Connect WebSocket</button>
+            <button id="captureBtn" class="capture" disabled>Send Frame</button>
+        </div>
+
+        <div id="status" class="status disconnected">Not connected</div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const connectBtn = document.getElementById('connectBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const statusDiv = document.getElementById('status');
+
+        let stream = null;
+        let ws = null;
+        let wsUrl = '';
+
+        // Determine WebSocket URL based on current location
+        function getWebSocketUrl() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            return `${protocol}//${host}/ws/track-person`;
+        }
+
+        // Start camera
+        startBtn.addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480 }
+                });
+                video.srcObject = stream;
+
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                connectBtn.disabled = false;
+
+                updateStatus('Camera started', 'connecting');
+            } catch (err) {
+                console.error('Camera error:', err);
+                updateStatus('Camera access denied: ' + err.message, 'disconnected');
+            }
+        });
+
+        // Stop camera
+        stopBtn.addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                stream = null;
+            }
+
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            connectBtn.disabled = true;
+            captureBtn.disabled = true;
+
+            updateStatus('Camera stopped', 'disconnected');
+        });
+
+        // Connect WebSocket
+        connectBtn.addEventListener('click', () => {
+            wsUrl = getWebSocketUrl();
+
+            try {
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = () => {
+                    updateStatus('WebSocket connected to ' + wsUrl, 'connected');
+                    captureBtn.disabled = false;
+                };
+
+                ws.onmessage = (event) => {
+                    console.log('Message from server:', event.data);
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    updateStatus('WebSocket error', 'disconnected');
+                };
+
+                ws.onclose = () => {
+                    updateStatus('WebSocket disconnected', 'disconnected');
+                    captureBtn.disabled = true;
+                    ws = null;
+                };
+
+                updateStatus('Connecting to ' + wsUrl + '...', 'connecting');
+            } catch (err) {
+                console.error('Connection error:', err);
+                updateStatus('Failed to connect: ' + err.message, 'disconnected');
+            }
+        });
+
+        // Capture and send frame
+        captureBtn.addEventListener('click', () => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                updateStatus('WebSocket not connected', 'disconnected');
+                return;
+            }
+
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw current video frame to canvas
+            ctx.drawImage(video, 0, 0);
+
+            // Convert to blob and send
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    ws.send(blob);
+                    console.log('Frame sent, size:', blob.size);
+                }
+            }, 'image/jpeg', 0.8);
+        });
+
+        function updateStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+        }
+    </script>
+</body>
+</html>

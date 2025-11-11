@@ -9,7 +9,6 @@ import {
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import Footer from "../../components/Footer";
-import List from "../../components/list/List";
 import Button from "../../components/Button";
 import Person from "../interfaces/person";
 import { usePeopleApi } from "../hooks/usePeopleApi";
@@ -56,7 +55,6 @@ export default function peopleList() {
 
   const handleSearchInVideos = () => {
     if (selectedPersonId) {
-      // Navigate to regular video search
       router.push("/(user)/searchPerson");
     }
   };
@@ -73,18 +71,17 @@ export default function peopleList() {
         }}
       >
         <View className="flex flex-col gap-6 px-6">
-          {/* Header with back button */}
-          <View className="flex flex-row justify-between items-center w-full">
+          <View className="flex flex-row justify-start items-center w-full pl-2 mb-4">
             <TouchableOpacity onPress={() => router.back()}>
               <Text className="text-lg text-darker font-semibold">Back</Text>
             </TouchableOpacity>
+          </View>
+          <View className="flex justify-center items-center w-full mb-4">
             <Text className="text-darker text-center font-semibold">
               Select Person to Track
             </Text>
-            <View className="w-12" />
           </View>
 
-          {/* Video selection status */}
           {selectedVideoId && (
             <View className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <Text className="text-blue-800 font-semibold">
@@ -96,13 +93,11 @@ export default function peopleList() {
             </View>
           )}
 
-          {/* Person selection */}
           <View className="flex flex-col gap-4">
             <Text className="text-darker text-center text-lg font-semibold">
               Select a person to find:
             </Text>
 
-            {/* Custom person selector for tracking */}
             <View className="h-[250px]">
               <FlatList
                 data={people}
@@ -149,7 +144,6 @@ export default function peopleList() {
               />
             </View>
 
-            {/* Selected person indicator */}
             {selectedPersonId && (
               <View className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <Text className="text-green-800 font-semibold">
@@ -159,7 +153,6 @@ export default function peopleList() {
             )}
           </View>
 
-          {/* Tracking options */}
           {canStartTracking && (
             <View className="flex flex-col gap-4 mt-4">
               <Text className="text-darker text-center text-lg font-semibold">
@@ -185,7 +178,6 @@ export default function peopleList() {
             </View>
           )}
 
-          {/* WebSocket status */}
           {isTrackingMode && (
             <View className="bg-red-50 border border-red-200 rounded-lg p-4">
               <View className="flex-row items-center">

@@ -1,4 +1,4 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import Button from "../../components/Button";
@@ -38,6 +38,11 @@ export default function userList() {
       >
         <View className="flex-1 justify-between items-center px-6">
           <View className="flex flex-col justify-center items-center gap-4 mb-2">
+            <View className="flex flex-row justify-start items-center w-full pl-2">
+              <TouchableOpacity className="flex" onPress={() => router.back()}>
+                <Text className="text-lg text-darker font-semibold">Back</Text>
+              </TouchableOpacity>
+            </View>
             <Text className="text-darker text-center text-lg font-semibold">
               Double click an user to edit:
             </Text>
