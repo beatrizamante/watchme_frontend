@@ -5,4 +5,14 @@ export default interface Person {
   embedding: Buffer;
 }
 
+export interface PersonDetection {
+  timestamp: number;
+  boundingBox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
 export type PersonWithoutId = Omit<Person, "id" | "embedding">;

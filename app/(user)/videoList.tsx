@@ -7,6 +7,7 @@ import CardList from "../../components/cardList/cardList";
 import ActionModal from "../../components/ActionModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useSelectedItem } from "../../stores/useSelectedItem";
+import { useTracking } from "../../stores/useTracking";
 import Video from "../interfaces/video";
 import { useVideoApi } from "../hooks/useVideoApi";
 
@@ -14,6 +15,7 @@ export default function videoList() {
   const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
   const { selectedId, clear, store } = useSelectedItem();
+  const { setSelectedVideo, selectedVideoId } = useTracking();
   const { list, deleteVideo, loading, error } = useVideoApi();
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -44,8 +46,14 @@ export default function videoList() {
   }, [selectedId]);
 
   const handleFind = () => {
-    console.log("Find action");
+    console.log("Find action - navigating to person selection");
     setActionModalVisible(false);
+
+    // Set the selected video for tracking and navigate to person selection
+    if (selectedId) {
+      setSelectedVideo(Number(selectedId));
+      router.push("/(user)/peopleList");
+    }
   };
 
   const handleDoubleClick = (id: string) => {

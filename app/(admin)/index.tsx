@@ -1,62 +1,43 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import React from "react";
-import { useRouter } from "expo-router";
+import { useAuth } from "../../stores/useAuth";
 import Footer from "../../components/Footer";
-import Card from "../../components/Card";
+import RoleBasedNavigation from "../../components/RoleBasedNavigation";
 
 export default function AdminHome() {
-  const router = useRouter();
-
-  const handlerNav = (id: string) => {
-    if (id === "users") {
-      router.push("/userList");
-    } else if (id === "people") {
-      router.push("/peopleList");
-    } else {
-      console.log("Unknown:", id);
-    }
-  };
+  const { user } = useAuth();
 
   return (
     <>
-      <View className="flex flex-1 flex-col justify-center items-center gap-4 min-h-full">
-        <View className="flex flex-1 flex-row justify-around items-center gap-4 w-full">
-          <Card
-            id="users"
-            title="Manage Users"
-            content="Create or manage existing users"
-            uri={require("../../assets/manage_users.png")}
-            onPress={handlerNav}
-          ></Card>
-          <Card
-            id="people"
-            title="Manage People"
-            content="Create or manage a body hash"
-            uri={require("../../assets/manage_people.png")}
-            onPress={handlerNav}
-          ></Card>
-        </View>
-        <TouchableOpacity
-          className="w-[140px]"
-          onPress={() => console.log("How to create hashes pressed")}
-        >
-          <Text className="text-lg text-darker font-semibold text-center">
-            How to create hashes_
-          </Text>
-        </TouchableOpacity>
-        <View className="self-center mt-6 px-6 max-w-[320px]">
-          <Text className="pt-6 text-darker font-semibold text-lg text-center">
-            Need to use a real time video stream? No fret, please, access the
-            documentation below and see how to connect across websocket
-            connections
-          </Text>
-          <TouchableOpacity className="pb-16" onPress={() => {}}>
-            <Text className="text-xl text-semidark font-semibold text-center">
-              Getting Started
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingTop: 24,
+          paddingBottom: 160,
+          flexGrow: 1,
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="flex flex-col gap-6">
+          <View className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <Text className="text-2xl font-bold text-darker mb-2">
+              Admin Dashboard
             </Text>
-          </TouchableOpacity>
+            <Text className="text-semidark text-lg">
+              Welcome {user?.name}! You have full system access.
+            </Text>
+          </View>
+
+          <RoleBasedNavigation />
+
+          <View className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+            <Text className="text-yellow-800 font-semibold text-base">
+              🔧 As an admin, you can access all user features plus system
+              management tools.
+            </Text>
+          </View>
         </View>
-      </View>
+      </ScrollView>
       <Footer />
     </>
   );

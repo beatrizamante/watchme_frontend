@@ -26,6 +26,11 @@ export default function AdminLayout() {
       <Stack.Screen name="userList" options={{ headerShown: false }} />
       <Stack.Screen name="userManagement" options={{ headerShown: false }} />
       <Stack.Screen name="peopleList" options={{ headerShown: false }} />
+      <Stack.Screen name="peopleManagement" options={{ headerShown: false }} />
+      <Stack.Screen name="videoList" options={{ headerShown: false }} />
+      <Stack.Screen name="videoManagement" options={{ headerShown: false }} />
+      <Stack.Screen name="findPeople" options={{ headerShown: false }} />
+      <Stack.Screen name="searchPerson" options={{ headerShown: false }} />
     </Stack>
   );
 }

@@ -21,9 +21,9 @@ export default function CardList({ data, onDoubleClick }: ListProps) {
           <Card
             id={item.id.toString()}
             onPress={onDoubleClick}
-            date={item.date}
-            user={item.user}
-            image_path={require("../../assets/manage_people.png")}
+            date={item.created_at}
+            user={item.username}
+            image_path={require(item.path)}
           />
         )}
         nestedScrollEnabled={true}

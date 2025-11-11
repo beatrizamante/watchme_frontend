@@ -63,7 +63,7 @@ export default function PeopleManagement() {
 
       if (result) {
         Alert.alert("Success", "Person created successfully!", [
-          { text: "OK", onPress: () => router.push("/(admin)/peopleList") },
+          { text: "OK", onPress: () => router.back() },
         ]);
         setName("");
         setSelectedImage(null);
