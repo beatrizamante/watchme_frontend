@@ -37,7 +37,7 @@ export default function Card({
         ></Image>
         <View className="gap-2 px-4 flex flex-col">
           <Text className="text-center text-darker font-semibold">
-            Created {date}
+            Created at {date}
           </Text>
           <Text className="text-center text-darker font-semibold">
             by {user}

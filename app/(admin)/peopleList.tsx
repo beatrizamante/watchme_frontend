@@ -13,7 +13,7 @@ export default function peopleList() {
   const [people, setPeople] = useState<Person[]>([]);
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-  const { list, deletePerson } = usePeopleApi();
+  const { list, deletePerson, loading, error } = usePeopleApi();
 
   const fetchPeople = async () => {
     const allPeople = await list();
@@ -63,6 +63,22 @@ export default function peopleList() {
             <Text className="text-darker text-center text-lg font-semibold">
               Click on the icon to delete:
             </Text>
+
+            {loading && (
+              <Text className="text-gray-500 text-center">
+                Loading people...
+              </Text>
+            )}
+
+            {error && (
+              <Text className="text-red-500 text-center">Error: {error}</Text>
+            )}
+
+            {!loading && !error && people.length === 0 && (
+              <Text className="text-gray-500 text-center">
+                No people found. Create your first person!
+              </Text>
+            )}
             <ListDelete data={people} handleDelete={handleDelete} />
             <Button content="Create new person!" onPress={createHandler} />
           </View>
