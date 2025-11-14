@@ -1,7 +1,10 @@
 import z from "zod";
 import { apiClient } from "../_lib/apiClient";
 import Person from "../../../app/interfaces/person";
-import { FindPersonInVideoResponse } from "./response/findPersonInVideo";
+import {
+  FindPersonInVideoJobResponse,
+  FindPersonInVideoResponse,
+} from "./response/findPersonInVideo";
 import { dataFileTypeCheck } from "../_lib/dataFileTypeCheck";
 
 export const callPeopleApi = {
@@ -32,6 +35,15 @@ export const callPeopleApi = {
     );
     return response.data;
   },
+
+  check: async (
+    data: CheckJobFindPersonInput
+  ): Promise<FindPersonInVideoJobResponse> => {
+    const response = await apiClient.get(
+      `/person/job-status?jobId=${data.jobId}`
+    );
+    return response.data;
+  },
 };
 
 const CreatePersonInput = z.object({
@@ -52,7 +64,12 @@ const FindPersonInVideoInput = z.object({
   videoId: z.number().nonnegative(),
 });
 
+const CheckJobFindPersonInput = z.object({
+  jobId: z.string().nonempty(),
+});
+
 export type CreatePersonInput = z.infer<typeof CreatePersonInput>;
 export type DeletePersonInput = z.infer<typeof DeletePersonInput>;
 export type FindPersonInput = z.infer<typeof FindPersonInput>;
 export type SearchInput = z.infer<typeof FindPersonInVideoInput>;
+export type CheckJobFindPersonInput = z.infer<typeof CheckJobFindPersonInput>;
