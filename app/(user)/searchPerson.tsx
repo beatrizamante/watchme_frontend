@@ -9,23 +9,15 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
 import Footer from "../../components/Footer";
+import Button from "../../components/Button";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { PersonDetection } from "../interfaces/person";
+import Person, { PersonDetection } from "../interfaces/person";
 import { useTracking } from "../../stores/useTracking";
 import { usePeopleApi } from "../hooks/usePeopleApi";
+import Video from "../interfaces/video";
 
-interface VideoData {
-  id: number;
-  name: string;
-  path: string;
-  duration: number;
-}
-
-interface PersonData {
-  id: number;
-  name: string;
-  embedding: number[];
-  detections: PersonDetection[];
+interface SearchPersonData extends Person {
+  matches: PersonDetection[];
 }
 
 export default function SearchPerson() {
@@ -33,10 +25,18 @@ export default function SearchPerson() {
   const screenWidth = Dimensions.get("window").width;
   const videoHeight = (screenWidth - 48) * 0.6;
 
-  const { selectedVideoId, selectedPersonId, clearSelection } = useTracking();
+  const {
+    selectedVideoId,
+    selectedPersonId,
+    clearSelection,
+    canStartTracking,
+    startTracking,
+    isTrackingMode,
+    tracker,
+  } = useTracking();
   const { search } = usePeopleApi();
-  const [videoData, setVideoData] = useState<VideoData | null>(null);
-  const [personData, setPersonData] = useState<PersonData | null>(null);
+  const [videoData, setVideoData] = useState<Video | null>(null);
+  const [personData, setPersonData] = useState<SearchPersonData | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [selectedDetection, setSelectedDetection] =
     useState<PersonDetection | null>(null);
@@ -71,20 +71,20 @@ export default function SearchPerson() {
 
         const searchResult = await search(
           Number(selectedPersonId),
-          selectedVideoId
+          Number(selectedVideoId)
         );
         if (!searchResult) {
           throw new Error("No search results found");
         }
 
         setVideoData({
-          id: Number(searchResult.video.id),
-          name: `Video ${searchResult.video.id}`,
+          id: String(searchResult.video.id),
+          user_id: searchResult.video.user_id || "",
           path: searchResult.video.path,
           duration: searchResult.video.length || 0,
         });
 
-        const detections: PersonDetection[] = searchResult.matches.map(
+        const matches: PersonDetection[] = searchResult.matches.map(
           (match: any) => ({
             timestamp: match.timestamp || 0,
             bbox: {
@@ -97,10 +97,11 @@ export default function SearchPerson() {
         );
 
         setPersonData({
-          id: Number(searchResult.person.id),
+          id: String(searchResult.person.id),
+          user_id: searchResult.person.user_id || "",
           name: searchResult.person.name,
-          embedding: [],
-          detections: detections,
+          embedding: Buffer.from([]),
+          matches: matches,
         });
 
         setLoading(false);
@@ -155,13 +156,24 @@ export default function SearchPerson() {
   };
 
   useEffect(() => {
-    if (personData?.detections) {
-      const currentDetection = personData.detections.find(
-        (detection) => Math.abs(detection.timestamp - currentTime) < 0.5
+    if (personData?.matches) {
+      const currentDetection = personData.matches.find(
+        (match) => Math.abs(match.timestamp - currentTime) < 0.5
       );
       setSelectedDetection(currentDetection || null);
     }
-  }, [currentTime, personData?.detections]);
+  }, [currentTime, personData?.matches]);
+
+  const handleStartLiveTracking = () => {
+    if (canStartTracking) {
+      startTracking();
+      router.push("/(user)/liveTracking");
+    }
+  };
+
+  const handleGoToPeopleList = () => {
+    router.push("/(user)/peopleList");
+  };
 
   const handleBack = () => {
     clearSelection();
@@ -200,15 +212,77 @@ export default function SearchPerson() {
           )}
 
           {error && (
-            <View className="bg-red-50 border border-red-200 p-4 rounded-lg">
-              <Text className="text-red-800 font-semibold">Error:</Text>
-              <Text className="text-red-700">{error}</Text>
-              <TouchableOpacity
-                onPress={handleBack}
-                className="mt-3 bg-red-100 p-2 rounded"
-              >
-                <Text className="text-red-800 text-center">Go Back</Text>
-              </TouchableOpacity>
+            <View>
+              <View className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
+                <Text className="text-yellow-800 font-semibold">Notice:</Text>
+                <Text className="text-yellow-700">{error}</Text>
+              </View>
+
+              {/* Show live tracking options when no video is selected */}
+              <View className="flex flex-col gap-4">
+                <Text className="text-darker text-center text-lg font-semibold">
+                  Choose an option:
+                </Text>
+
+                <View className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <Text className="text-blue-800 font-semibold mb-2">
+                    📹 Select Video & Person
+                  </Text>
+                  <Text className="text-blue-700 text-sm mb-3">
+                    Go back to select both a video and person for search
+                    tracking.
+                  </Text>
+                  <TouchableOpacity
+                    onPress={handleGoToPeopleList}
+                    className="bg-blue-100 border border-blue-300 rounded-lg p-3"
+                  >
+                    <View className="flex-row items-center justify-center">
+                      <Ionicons name="videocam" size={20} color="#3B82F6" />
+                      <Text className="text-blue-800 font-semibold ml-2">
+                        Select Video & Person
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                <View className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <Text className="text-red-800 font-semibold mb-2">
+                    🔴 Live Feed Tracking
+                  </Text>
+                  <Text className="text-red-700 text-sm mb-3">
+                    Connect to a live camera feed for real-time tracking. You
+                    can select a person after connecting.
+                  </Text>
+                  <Button
+                    content="Start Live Tracking"
+                    onPress={handleStartLiveTracking}
+                  />
+                </View>
+
+                {isTrackingMode && (
+                  <View className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <View className="flex-row items-center">
+                      <View
+                        className={`w-3 h-3 rounded-full mr-2 ${
+                          tracker.status.connected
+                            ? "bg-green-500"
+                            : tracker.status.connecting
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                        }`}
+                      />
+                      <Text className="text-green-800 font-semibold">
+                        Live Tracking:{" "}
+                        {tracker.status.connected
+                          ? "Connected"
+                          : tracker.status.connecting
+                          ? "Connecting..."
+                          : "Disconnected"}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </View>
             </View>
           )}
 
@@ -279,7 +353,7 @@ export default function SearchPerson() {
                   Tracking: {personData.name}
                 </Text>
                 <Text className="text-semidark">
-                  Found {personData.detections.length} instances in this video
+                  Found {personData.matches.length} instances in this video
                 </Text>
               </View>
 
@@ -287,12 +361,12 @@ export default function SearchPerson() {
                 <Text className="text-darker text-lg font-semibold mb-3">
                   Detection Timeline
                 </Text>
-                {personData.detections.map((detection, index) => (
+                {personData.matches.map((match, index) => (
                   <TouchableOpacity
                     key={index}
-                    onPress={() => jumpToTimestamp(detection.timestamp)}
+                    onPress={() => jumpToTimestamp(match.timestamp)}
                     className={`flex-row justify-between items-center p-3 mb-2 rounded-lg ${
-                      selectedDetection?.timestamp === detection.timestamp
+                      selectedDetection?.timestamp === match.timestamp
                         ? "bg-blue-100 border border-blue-300"
                         : "bg-white border border-gray-200"
                     }`}
@@ -305,10 +379,10 @@ export default function SearchPerson() {
                     </View>
                     <View className="items-end">
                       <Text className="text-darker font-semibold">
-                        {formatTime(detection.timestamp)}
+                        {formatTime(match.timestamp)}
                       </Text>
                       <Text className="text-semidark text-sm">
-                        {detection.bbox.width}×{detection.bbox.height}
+                        {match.bbox.w}×{match.bbox.h}
                         px
                       </Text>
                     </View>
