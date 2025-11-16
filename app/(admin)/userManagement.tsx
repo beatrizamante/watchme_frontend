@@ -1,90 +1,269 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
+import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
+import * as DocumentPicker from "expo-document-picker";
 import Button from "../../components/Button";
 import Footer from "../../components/Footer";
 import Input from "../../components/form/Input";
 import { useSelectedItem } from "../../stores/useSelectedItem";
-import {
-  erase,
-  get,
-  patch,
-  store,
-  UserSchema,
-} from "../../infrastructure/repository/UserRepository";
 import DropDown from "../../components/form/Dropdown";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import { useUsersApi } from "../hooks/useUsersApi";
+import {
+  CreateUserInput,
+  UpdateUserInput,
+} from "../../infrastructure/api/users/callUsersApi";
+import { showPlatformAlert } from "../../utils/alertUtils";
 
 export default function UserManagement() {
   const router = useRouter();
   const { selectedId, clear } = useSelectedItem();
-  const [name, setname] = useState("");
+  const { create, update, find } = useUsersApi();
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"user" | "admin">("user");
   const [password, setPassword] = useState("");
+  useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+
+  const [originalUser, setOriginalUser] = useState<{
+    username: string;
+    email: string;
+    role: "user" | "admin";
+  } | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       if (selectedId) {
-        const user = await get(selectedId);
+        const user = await find(Number(selectedId));
         if (user) {
-          setname(user.name);
+          const roleValue = user.role.toLowerCase() as "user" | "admin";
+          setUsername(user.username);
           setEmail(user.email);
-          setRole(user.role as "user" | "admin");
+          setRole(roleValue);
+
+          setOriginalUser({
+            username: user.username,
+            email: user.email,
+            role: roleValue,
+          });
           return;
         }
       }
-      setname("");
+      setUsername("");
       setEmail("");
       setPassword("");
       setRole("user");
+      setOriginalUser(null);
     };
 
     fetchUser();
   }, [selectedId]);
 
   const handleConfirmDelete = async () => {
-    await erase(selectedId!);
-    clear();
-    console.log("DELETE CONFIRMED!");
-    setConfirmModalVisible(false);
-    router.replace("/userList");
+    try {
+      const userData: UpdateUserInput = {
+        id: Number(selectedId!),
+        active: false,
+      };
+
+      const success = await update(userData);
+      if (success) {
+        showPlatformAlert(
+          "✅ Success",
+          `User "${username}" has been deactivated successfully.`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                clear();
+                console.log("DELETE CONFIRMED!");
+                setConfirmModalVisible(false);
+                router.replace("/(admin)/userList");
+              },
+            },
+          ]
+        );
+      } else {
+        showPlatformAlert(
+          "❌ Deactivation Failed",
+          "The user could not be deactivated. Please try again."
+        );
+        setConfirmModalVisible(false);
+      }
+    } catch (error: any) {
+      console.error("Error deactivating user:", error);
+      const errorMessage =
+        error?.message ||
+        "An unexpected error occurred while deactivating the user.";
+      showPlatformAlert("❌ Deactivation Error", errorMessage);
+      setConfirmModalVisible(false);
+    }
   };
 
   const handleUpdate = async () => {
-    await patch(selectedId!, { name, email, password, role });
-    clear();
-    router.replace("/(admin)/userList");
+    if (!originalUser) {
+      showPlatformAlert("❌ Error", "Original user data not found");
+      return;
+    }
+
+    if (username !== originalUser.username && username.trim().length < 3) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Username must be at least 3 characters long."
+      );
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email !== originalUser.email && !emailRegex.test(email.trim())) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Please enter a valid email address."
+      );
+      return;
+    }
+
+    if (password.trim() !== "" && password.length < 6) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Password must be at least 6 characters long."
+      );
+      return;
+    }
+
+    const userData: UpdateUserInput = {
+      id: Number(selectedId!),
+    };
+
+    if (username !== originalUser.username) {
+      userData.username = username;
+    }
+    if (email !== originalUser.email) {
+      userData.email = email;
+    }
+    if (role !== originalUser.role) {
+      userData.role = role.toUpperCase() as "USER" | "ADMIN";
+    }
+    if (password.trim() !== "") {
+      userData.password = password;
+    }
+
+    const hasChanges = Object.keys(userData).length > 1;
+
+    if (!hasChanges) {
+      showPlatformAlert("ℹ️ No Changes", "No changes detected to update.");
+      return;
+    }
+
+    try {
+      console.log("Sending update data:", userData);
+      const result = await update(userData);
+
+      if (result) {
+        showPlatformAlert(
+          "✅ Success",
+          `User "${username}" updated successfully!`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                clear();
+                router.replace("/(admin)/userList");
+              },
+            },
+          ]
+        );
+      } else {
+        showPlatformAlert(
+          "❌ Update Failed",
+          "The user could not be updated. Please try again."
+        );
+      }
+    } catch (error: any) {
+      console.error("Error updating user:", error);
+      const errorMessage =
+        error?.message ||
+        "An unexpected error occurred while updating the user.";
+      showPlatformAlert("❌ Update Error", errorMessage);
+    }
   };
 
   const handleDelete = async () => {
     setConfirmModalVisible(true);
-    console.log("Deletar usuário:", selectedId);
+    console.log("Desativar usuário:", selectedId);
   };
 
   const handleCreate = async () => {
-    const parse = UserSchema.safeParse({
-      name,
-      email,
-      role: role.toLowerCase(),
-      password,
-    });
-
-    if (!parse.success) {
-      Alert.alert("The values were not validated.");
+    if (!username.trim() || !email.trim() || !password.trim()) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Please fill in all required fields."
+      );
       return;
     }
-    await store(parse.data);
-    clear();
-    router.replace("/(admin)/userList");
+
+    if (username.trim().length < 3) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Username must be at least 3 characters long."
+      );
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Please enter a valid email address."
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Password must be at least 6 characters long."
+      );
+      return;
+    }
+
+    try {
+      const userData: CreateUserInput = {
+        username: username.trim(),
+        email: email.trim(),
+        password,
+      };
+
+      const result = await create(userData);
+
+      if (result) {
+        showPlatformAlert(
+          "✅ Success",
+          `User "${username.trim()}" created successfully!`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                clear();
+                router.replace("/(admin)/userList");
+              },
+            },
+          ]
+        );
+      } else {
+        showPlatformAlert(
+          "❌ Creation Failed",
+          "The user could not be created. Email might already exist."
+        );
+      }
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      const errorMessage =
+        error?.message ||
+        "An unexpected error occurred while creating the user.";
+      showPlatformAlert("❌ Creation Error", errorMessage);
+    }
   };
 
   const handleBack = () => {
@@ -106,21 +285,23 @@ export default function UserManagement() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex flex-col justify-center items-center gap-4 mb-2">
-          <View className="flex flex-row justify-between items-center w-full px-7">
-            <TouchableOpacity className="flex w-[140px]" onPress={handleBack}>
-              <Text className="text-lg text-darker font-semibold text-center">
-                Back
-              </Text>
+          <View className="flex flex-row justify-start items-center w-full pl-2 mb-4">
+            <TouchableOpacity className="flex" onPress={handleBack}>
+              <Text className="text-lg text-darker font-semibold">Back</Text>
             </TouchableOpacity>
-            <Text className="text-darker text-center font-semibold">
-              {isEditing ? `Editing ${name}` : ""}
-            </Text>
           </View>
+          {isEditing && (
+            <View className="flex justify-center items-center w-full mb-4">
+              <Text className="text-darker text-center font-semibold">
+                Editing {username}
+              </Text>
+            </View>
+          )}
 
           <Input
-            label="name"
-            value={name}
-            handler={setname}
+            label="username"
+            value={username}
+            handler={setUsername}
             isPassword={false}
           />
           <Input
@@ -135,7 +316,14 @@ export default function UserManagement() {
             handler={setPassword}
             isPassword={true}
           />
-          <DropDown label="role" value={role} handler={setRole} />
+
+          {isEditing ? (
+            <>
+              <DropDown label="role" value={role} handler={setRole} />
+            </>
+          ) : (
+            <View></View>
+          )}
 
           {isEditing ? (
             <View className="flex flex-row justify-between items-center gap-4 mt-4">

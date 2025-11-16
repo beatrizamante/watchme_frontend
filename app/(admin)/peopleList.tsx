@@ -1,19 +1,19 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import Footer from "../../components/Footer";
 import Button from "../../components/Button";
 import { useRouter } from "expo-router";
 import ListDelete from "../../components/list/DeleteList";
-import { erase, list } from "../../infrastructure/repository/PeopleRepository";
-import { useSelectedItem } from "../../stores/useSelectedItem";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import Person from "../interfaces/person";
+import { usePeopleApi } from "../hooks/usePeopleApi";
 
 export default function peopleList() {
   const router = useRouter();
   const [people, setPeople] = useState<Person[]>([]);
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const { list, deletePerson, loading, error } = usePeopleApi();
 
   const fetchPeople = async () => {
     const allPeople = await list();
@@ -27,7 +27,7 @@ export default function peopleList() {
 
   const handleConfirmDelete = async () => {
     if (!idToDelete) return;
-    await erase(idToDelete);
+    await deletePerson(Number(idToDelete));
     console.log("DELETE CONFIRMED!");
     await fetchPeople();
     setConfirmModalVisible(false);
@@ -55,9 +55,30 @@ export default function peopleList() {
       >
         <View className="flex-1 justify-between items-center px-6">
           <View className="flex flex-col justify-center items-center gap-4 mb-2">
+            <View className="flex flex-row justify-start items-center w-full pl-2">
+              <TouchableOpacity className="flex" onPress={() => router.back()}>
+                <Text className="text-lg text-darker font-semibold">Back</Text>
+              </TouchableOpacity>
+            </View>
             <Text className="text-darker text-center text-lg font-semibold">
               Click on the icon to delete:
             </Text>
+
+            {loading && (
+              <Text className="text-gray-500 text-center">
+                Loading people...
+              </Text>
+            )}
+
+            {error && (
+              <Text className="text-red-500 text-center">Error: {error}</Text>
+            )}
+
+            {!loading && !error && people.length === 0 && (
+              <Text className="text-gray-500 text-center">
+                No people found. Create your first person!
+              </Text>
+            )}
             <ListDelete data={people} handleDelete={handleDelete} />
             <Button content="Create new person!" onPress={createHandler} />
           </View>

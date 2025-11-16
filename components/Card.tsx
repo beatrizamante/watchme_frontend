@@ -8,8 +8,8 @@ import {
 import React from "react";
 
 type ImageCardProps = {
-  id: string;
-  onPress: (id: string) => void;
+  id?: string;
+  onPress: (id?: string) => void;
   title: string;
   content: string;
   uri: ImageSourcePropType;

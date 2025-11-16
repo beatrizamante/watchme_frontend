@@ -1,47 +1,49 @@
-import { View, Text } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import React from "react";
-import { useRouter } from "expo-router";
+import { useAuth } from "../../stores/useAuth";
 import Footer from "../../components/Footer";
-import Card from "../../components/Card";
+import RoleBasedNavigation from "../../components/RoleBasedNavigation";
 
 export default function UserHome() {
-  const router = useRouter();
-
-  const handlerNav = (id: string) => {
-    if (id === "people") {
-      router.push("/peopleList");
-    } else if (id === "video") {
-      router.push("/videoList");
-    } else {
-      console.log("Unknown:", id);
-    }
-  };
+  const { user } = useAuth();
   return (
     <>
-      <View className="flex flex-1 flex-col justify-center items-center gap-4 min-h-full">
-        <View className="flex flex-row justify-around items-start gap-4 px-10">
-          <Card
-            title="Manage Videos"
-            content="Create or manage existing videos"
-            uri={require("../../assets/manage_videos.png")}
-            id="video"
-            onPress={handlerNav}
-          />
-          <Card
-            title="Finding People"
-            content="Look for the person you need to find"
-            uri={require("../../assets/finding_people.png")}
-            id="people"
-            onPress={handlerNav}
-          />
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingTop: 24,
+          paddingBottom: 160,
+          flexGrow: 1,
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="flex flex-col gap-6">
+          <View className="bg-semilight p-6 mt-4 mb-4">
+            <Text className="text-2xl font-bold text-darker mb-2">
+              Welcome back, {user?.name}!
+            </Text>
+            <Text className="text-semidark text-lg">
+              {user?.role === "ADMIN"
+                ? "You have admin access to all system features"
+                : "Manage your videos and people for AI recognition"}
+            </Text>
+            <RoleBasedNavigation />
+          </View>
+
+          <View className="bg-semilight border border-semidark rounded-lg p-6 mt-4">
+            <Text className="text-blue-800 font-semibold text-base">
+              💡 Now you can create and manage your own people embeddings!
+              Upload clear photos for better recognition accuracy.
+            </Text>
+          </View>
+          <View className="bg-semilight p-6 mt-4">
+            <Text className="text-darker text-lg">
+              If you can’t find a specific person’s hash, please, contact your
+              administrative user. They’ll be the one to create one for you.
+            </Text>
+          </View>
         </View>
-        <View className="self-center mt-6 px-6 max-w-[320px]">
-          <Text className="text-darker font-semibold text-lg">
-            If you can’t find a specific person’s hash, please, contact your
-            administrative user. They’ll be the one to create one for you.{" "}
-          </Text>
-        </View>
-      </View>
+      </ScrollView>
       <Footer />
     </>
   );

@@ -40,18 +40,14 @@ export default function NavBar() {
         <View className="flex-row space-x-8 px-6 pt-8 gap-4">
           <Pressable
             onPress={() =>
-              Linking.openURL(
-                "https://zustand.docs.pmnd.rs/guides/tutorial-tic-tac-toe"
-              )
+              Linking.openURL("https://beatrizamante.github.io/watchme_ai")
             }
           >
             <Text className="text-lg font-semibold text-semidark">Docs</Text>
           </Pressable>
           <Pressable
             onPress={() =>
-              Linking.openURL(
-                "https://zustand.docs.pmnd.rs/guides/tutorial-tic-tac-toe"
-              )
+              Linking.openURL("https://github.com/beatrizamante/watchme_api")
             }
           >
             <Text className="text-lg font-semibold text-semidark">About</Text>

@@ -1,50 +1,91 @@
-import { View, Text, ScrollView, Alert } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import React, { useState } from "react";
 import Footer from "../components/Footer";
 import Input from "../components/form/Input";
 import Button from "../components/Button";
 import { useRouter } from "expo-router";
-import { store, UserSchema } from "../infrastructure/repository/UserRepository";
+import { useLoginApi } from "./hooks/useLoginApi";
+import { showPlatformAlert } from "../utils/alertUtils";
 
 export default function SignUp() {
-  const [name, setname] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const { register } = useLoginApi();
 
   const handleCreateAccount = async () => {
-    const parse = UserSchema.safeParse({
-      name,
-      email,
-      password,
-      role: "user",
-    });
+    if (
+      !username.trim() ||
+      !email.trim() ||
+      !password.trim() ||
+      !confirmPass.trim()
+    ) {
+      showPlatformAlert("❌ Validation Error", "Please fill in all fields.");
+      return;
+    }
 
-    if (!parse.success) {
-      console.log(parse.error.format());
-      Alert.alert("Validation Error", "Please check your inputs");
+    if (username.trim().length < 3) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Username must be at least 3 characters long."
+      );
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Please enter a valid email address."
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      showPlatformAlert(
+        "❌ Validation Error",
+        "Password must be at least 6 characters long."
+      );
+      return;
+    }
+
+    if (password !== confirmPass) {
+      showPlatformAlert(
+        "❌ Password Mismatch",
+        "The password and confirmation password must match."
+      );
       return;
     }
 
     try {
-      await store(parse.data);
-      console.log("User registered!");
-      router.replace("/");
-    } catch (error) {
-      console.error("Database Error:", error);
-      Alert.alert("Error", "Failed to register user.");
-    }
+      const data = {
+        username: username.trim(),
+        email: email.trim(),
+        password,
+      };
 
-    // if (password === confirmPass) {
-    //   console.log("Passwords________", password, confirmPass);
-    // } else {
-    //   Alert.alert(
-    //     "Password error:",
-    //     "The password must be the same as the confirmation pass"
-    //   );
-    //   return;
-    // }
+      const user = await register(data);
+
+      if (user) {
+        showPlatformAlert(
+          "✅ Account Created!",
+          `Welcome ${username}! Your account has been created successfully. Please log in.`,
+          [{ text: "OK", onPress: () => router.replace("/") }]
+        );
+      } else {
+        showPlatformAlert(
+          "❌ Registration Failed",
+          "There was an error creating your account. The email might already be in use."
+        );
+      }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      const errorMessage =
+        error?.message || "An unexpected error occurred during registration.";
+      showPlatformAlert("❌ Registration Error", errorMessage);
+    }
   };
 
   return (
@@ -65,8 +106,8 @@ export default function SignUp() {
             </Text>
             <Input
               label="username"
-              value={name}
-              handler={setname}
+              value={username}
+              handler={setUsername}
               isPassword={false}
             />
             <Input

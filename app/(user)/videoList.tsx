@@ -1,4 +1,4 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, Alert, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import Button from "../../components/Button";
@@ -7,39 +7,54 @@ import CardList from "../../components/cardList/cardList";
 import ActionModal from "../../components/ActionModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { useSelectedItem } from "../../stores/useSelectedItem";
-import { Video } from "../interfaces/video";
-import { erase, list } from "../../infrastructure/repository/VideoRepository";
-import data from "../../mocks/videos";
+import { useTracking } from "../../stores/useTracking";
+import Video from "../interfaces/video";
+import { useVideoApi } from "../hooks/useVideoApi";
 
 export default function videoList() {
   const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
   const { selectedId, clear, store } = useSelectedItem();
+  const { setSelectedVideo, selectedVideoId } = useTracking();
+  const { list, deleteVideo, loading, error } = useVideoApi();
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
 
   useEffect(() => {
+    // Clear any previously selected item when entering the page
+    clear();
+
     const fetchVideo = async () => {
-      const allVideos = await list();
-      if (!allVideos) return;
-      setVideos(allVideos);
+      try {
+        console.log("Fetching videos...");
+        const allVideos = await list();
+
+        if (allVideos && Array.isArray(allVideos)) {
+          setVideos(allVideos);
+          console.log("Videos set successfully:", allVideos.length);
+        } else {
+          console.warn("Invalid video data received:", allVideos);
+        }
+      } catch (err) {
+        console.error("Error fetching videos:", err);
+      }
     };
     fetchVideo();
   }, []);
 
-  useEffect(() => {
-    if (selectedId) {
-      setActionModalVisible(true);
-    }
-  }, [selectedId]);
-
   const handleFind = () => {
-    console.log("Find action");
+    console.log("Find action - navigating to person selection");
     setActionModalVisible(false);
+
+    // Set the selected video for tracking and navigate to person selection
+    if (selectedId) {
+      setSelectedVideo(Number(selectedId));
+      router.push("/(user)/peopleList");
+    }
   };
 
   const handleDoubleClick = (id: string) => {
-    store(id);
+    store(Number(id));
     setActionModalVisible(true);
   };
 
@@ -50,10 +65,19 @@ export default function videoList() {
   };
 
   const handleConfirmDelete = async () => {
-    await erase(selectedId!);
-    clear();
-    console.log("DELETE CONFIRMED!");
-    setConfirmModalVisible(false);
+    try {
+      const success = await deleteVideo(Number(selectedId!));
+
+      if (success) {
+        const updatedVideos = await list();
+        if (updatedVideos && Array.isArray(updatedVideos)) {
+          setVideos(updatedVideos);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error deleting video:", error);
+      setConfirmModalVisible(false);
+    }
   };
 
   const createHandler = () => {
@@ -73,10 +97,32 @@ export default function videoList() {
       >
         <View className="flex-1 justify-between items-center px-6">
           <View className="flex flex-col justify-center items-center gap-4 mb-2">
+            <View className="flex flex-row justify-start items-center w-full pl-2">
+              <TouchableOpacity className="flex" onPress={() => router.back()}>
+                <Text className="text-lg text-darker font-semibold">Back</Text>
+              </TouchableOpacity>
+            </View>
             <Text className="text-darker text-center text-lg font-semibold">
               Select a video to manage:
             </Text>
-            <CardList data={data} onDoubleClick={handleDoubleClick} />
+
+            {loading && (
+              <Text className="text-gray-500 text-center">
+                Loading videos...
+              </Text>
+            )}
+
+            {error && (
+              <Text className="text-red-500 text-center">Error: {error}</Text>
+            )}
+
+            {!loading && !error && videos.length === 0 && (
+              <Text className="text-gray-500 text-center">
+                No videos found. Create your first video!
+              </Text>
+            )}
+
+            <CardList data={videos} onDoubleClick={handleDoubleClick} />
             <Button content="Create new video!" onPress={createHandler} />
           </View>
         </View>

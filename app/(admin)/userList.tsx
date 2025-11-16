@@ -1,19 +1,20 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import Button from "../../components/Button";
 import Footer from "../../components/Footer";
-import { list } from "../../infrastructure/repository/UserRepository";
 import List from "../../components/list/List";
 import User from "../interfaces/user";
+import { useUsersApi } from "../hooks/useUsersApi";
 
 export default function userList() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
+  const { list } = useUsersApi();
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const allUsers = await list();
+      const allUsers = await list(true);
       if (!allUsers) return;
       setUsers(allUsers);
     };
@@ -37,6 +38,11 @@ export default function userList() {
       >
         <View className="flex-1 justify-between items-center px-6">
           <View className="flex flex-col justify-center items-center gap-4 mb-2">
+            <View className="flex flex-row justify-start items-center w-full pl-2">
+              <TouchableOpacity className="flex" onPress={() => router.back()}>
+                <Text className="text-lg text-darker font-semibold">Back</Text>
+              </TouchableOpacity>
+            </View>
             <Text className="text-darker text-center text-lg font-semibold">
               Double click an user to edit:
             </Text>

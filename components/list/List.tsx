@@ -18,7 +18,7 @@ export default function List({ data, navigateTo }: ListProps) {
         renderItem={({ item }) => (
           <Item
             id={item.id.toString()}
-            content={item.name}
+            content={item.username}
             onPress={handlePress}
           />
         )}
