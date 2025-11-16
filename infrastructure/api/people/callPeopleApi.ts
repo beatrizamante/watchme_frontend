@@ -1,11 +1,8 @@
 import z from "zod";
 import { apiClient } from "../_lib/apiClient";
 import Person from "../../../app/interfaces/person";
-import {
-  FindPersonInVideoJobResponse,
-  FindPersonInVideoResponse,
-} from "./response/findPersonInVideo";
 import { dataFileTypeCheck } from "../_lib/dataFileTypeCheck";
+import { Detections } from "../../../app/interfaces/detections";
 
 export const callPeopleApi = {
   create: async (data: CreatePersonInput): Promise<Person> => {
@@ -29,18 +26,9 @@ export const callPeopleApi = {
     return response.data;
   },
 
-  search: async (data: SearchInput): Promise<FindPersonInVideoResponse> => {
+  search: async (data: SearchInput): Promise<Detections> => {
     const response = await apiClient.get(
       `/person/find?id=${data.id}&videoId=${data.videoId}`
-    );
-    return response.data;
-  },
-
-  check: async (
-    data: CheckJobFindPersonInput
-  ): Promise<FindPersonInVideoJobResponse> => {
-    const response = await apiClient.get(
-      `/person/job-status?jobId=${data.jobId}`
     );
     return response.data;
   },
@@ -64,12 +52,7 @@ const FindPersonInVideoInput = z.object({
   videoId: z.number().nonnegative(),
 });
 
-const CheckJobFindPersonInput = z.object({
-  jobId: z.string().nonempty(),
-});
-
 export type CreatePersonInput = z.infer<typeof CreatePersonInput>;
 export type DeletePersonInput = z.infer<typeof DeletePersonInput>;
 export type FindPersonInput = z.infer<typeof FindPersonInput>;
 export type SearchInput = z.infer<typeof FindPersonInVideoInput>;
-export type CheckJobFindPersonInput = z.infer<typeof CheckJobFindPersonInput>;

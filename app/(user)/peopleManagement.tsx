@@ -26,7 +26,6 @@ export default function PeopleManagement() {
       if (!result.canceled && result.assets && result.assets[0]) {
         const selectedFile = result.assets[0];
 
-        // Validate file type
         if (!selectedFile.mimeType?.startsWith("image/")) {
           showPlatformAlert(
             "❌ Invalid File",
@@ -57,7 +56,6 @@ export default function PeopleManagement() {
   };
 
   const handleCreate = async () => {
-    // Validation
     if (!name.trim()) {
       showPlatformAlert("❌ Validation Error", "Please enter a person's name");
       return;
@@ -79,7 +77,6 @@ export default function PeopleManagement() {
       return;
     }
 
-    // Validate image size (optional)
     const maxSizeInMB = 10;
     if (selectedImage.size && selectedImage.size > maxSizeInMB * 1024 * 1024) {
       showPlatformAlert(

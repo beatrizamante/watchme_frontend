@@ -15,13 +15,6 @@ export default function Home() {
   const [email, onChangeLogin] = React.useState("");
   const [password, onChangePassword] = React.useState("");
 
-  useEffect(() => {
-    const setup = async () => {
-      console.log("Tables created");
-    };
-    setup();
-  }, []);
-
   const handleLogin = async () => {
     try {
       const response = await login({ email, password });

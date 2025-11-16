@@ -12,6 +12,8 @@ interface TrackingContextType {
   tracker: ReturnType<typeof usePersonTracker>;
   canStartTracking: boolean;
   startTracking: () => void;
+  isProcessingVideo: boolean;
+  setProcessingVideo: (processing: boolean) => void;
 }
 
 const TrackingContext = createContext<TrackingContextType | null>(null);
@@ -22,6 +24,7 @@ export const TrackingProvider: React.FC<{ children: ReactNode }> = ({
   const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [isTrackingMode, setIsTrackingMode] = useState(false);
+  const [isProcessingVideo, setIsProcessingVideo] = useState(false);
 
   const tracker = usePersonTracker();
 
@@ -42,7 +45,7 @@ export const TrackingProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const canStartTracking =
-    selectedVideoId !== null && selectedPersonId !== null;
+    selectedVideoId !== null && selectedPersonId !== null && !isProcessingVideo;
 
   const startTracking = () => {
     if (canStartTracking) {
@@ -62,6 +65,8 @@ export const TrackingProvider: React.FC<{ children: ReactNode }> = ({
     tracker,
     canStartTracking,
     startTracking,
+    isProcessingVideo,
+    setProcessingVideo: setIsProcessingVideo,
   };
 
   return (
