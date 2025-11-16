@@ -14,6 +14,7 @@ import Person from "../interfaces/person";
 import { usePeopleApi } from "../hooks/usePeopleApi";
 import { useTracking } from "../../stores/useTracking";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { showPlatformAlert } from "../../utils/alertUtils";
 
 export default function peopleList() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function peopleList() {
     startTracking,
     isTrackingMode,
     tracker,
+    isProcessingVideo,
   } = useTracking();
 
   useEffect(() => {
@@ -45,15 +47,19 @@ export default function peopleList() {
   const handleStartLiveTracking = () => {
     if (canStartTracking) {
       startTracking();
-      // Navigate to live tracking page
       router.push("/(user)/liveTracking");
     }
   };
 
   const handleSearchInVideos = () => {
-    if (selectedPersonId && selectedVideoId) {
-      // Navigate to uploaded video search page
+    if (selectedPersonId && selectedVideoId && !isProcessingVideo) {
       router.push("/(user)/searchPerson");
+    } else if (isProcessingVideo) {
+      showPlatformAlert(
+        "Video Processing",
+        "Please wait for the current video analysis to complete before starting a new search.",
+        [{ text: "OK" }]
+      );
     }
   };
 
@@ -83,7 +89,7 @@ export default function peopleList() {
           {selectedVideoId && (
             <View className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <Text className="text-blue-800 font-semibold">
-                📹 Video Selected: ID {selectedVideoId}
+                Video Selected: {selectedVideoId}
               </Text>
               <Text className="text-blue-600 text-sm mt-1">
                 Now choose a person to track in this video
@@ -95,6 +101,11 @@ export default function peopleList() {
             <Text className="text-darker text-center text-lg font-semibold">
               Select a person to find:
             </Text>
+
+            <Button
+              content="Create new person!"
+              onPress={() => router.push("/(user)/peopleManagement")}
+            />
 
             <View className="h-[250px]">
               <FlatList
@@ -149,6 +160,21 @@ export default function peopleList() {
                 </Text>
               </View>
             )}
+
+            {isProcessingVideo && (
+              <View className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <View className="flex-row items-center">
+                  <Ionicons name="hourglass" size={20} color="#EA580C" />
+                  <Text className="text-orange-800 font-semibold ml-2">
+                    🤖 AI Processing in Progress
+                  </Text>
+                </View>
+                <Text className="text-orange-700 text-sm mt-1">
+                  Please wait for the current video analysis to complete before
+                  starting a new search.
+                </Text>
+              </View>
+            )}
           </View>
 
           {canStartTracking && (
@@ -176,17 +202,30 @@ export default function peopleList() {
                   📹 Search in Uploaded Video
                 </Text>
                 <Text className="text-blue-700 text-sm mb-3">
-                  Search for this person in the uploaded video file. Shows all
-                  detected instances with timestamps.
+                  Go to detection page where you can manually start AI analysis
+                  of the uploaded video file.
                 </Text>
                 <TouchableOpacity
                   onPress={handleSearchInVideos}
-                  className="bg-blue-100 border border-blue-300 rounded-lg p-3"
+                  disabled={isProcessingVideo}
+                  className={`rounded-lg p-3 ${
+                    isProcessingVideo
+                      ? "bg-gray-200 border border-gray-300"
+                      : "bg-blue-100 border border-blue-300"
+                  }`}
                 >
                   <View className="flex-row items-center justify-center">
-                    <Ionicons name="search" size={20} color="#3B82F6" />
-                    <Text className="text-blue-800 font-semibold ml-2">
-                      Search in Video
+                    <Ionicons
+                      name={isProcessingVideo ? "hourglass" : "arrow-forward"}
+                      size={20}
+                      color={isProcessingVideo ? "#9CA3AF" : "#3B82F6"}
+                    />
+                    <Text
+                      className={`font-semibold ml-2 ${
+                        isProcessingVideo ? "text-gray-500" : "text-blue-800"
+                      }`}
+                    >
+                      {isProcessingVideo ? "Processing..." : "Go to Detection"}
                     </Text>
                   </View>
                 </TouchableOpacity>
